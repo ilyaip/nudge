@@ -12,13 +12,20 @@ export default defineEventHandler(async (event) => {
     return
   }
 
+  console.log('[Telegram Auth] Processing request:', path)
+
   try {
     // Получаем initData из заголовков или query параметров
     const initData = getHeader(event, 'x-telegram-init-data') || 
                      getQuery(event).initData as string
 
+    console.log('[Telegram Auth] initData present:', !!initData)
+
     // В development режиме или если нет initData, используем тестового пользователя
     const isDevelopment = process.env.NODE_ENV !== 'production'
+    
+    console.log('[Telegram Auth] Environment:', process.env.NODE_ENV)
+    console.log('[Telegram Auth] isDevelopment:', isDevelopment)
     
     if (!initData) {
       if (isDevelopment) {
@@ -33,6 +40,7 @@ export default defineEventHandler(async (event) => {
         return
       }
 
+      console.error('[Telegram Auth] No initData in production mode')
       throw createError({
         statusCode: 401,
         statusMessage: 'Telegram authorization required'

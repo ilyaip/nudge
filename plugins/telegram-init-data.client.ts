@@ -7,21 +7,29 @@ export default defineNuxtPlugin(() => {
   // Получаем initData при инициализации
   if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
     initData.value = window.Telegram.WebApp.initData
-    console.log('[Telegram Init Data] initData получен:', initData.value ? 'да' : 'нет')
+    console.log('[Telegram Init Data Plugin] Telegram WebApp available')
+    console.log('[Telegram Init Data Plugin] initData received:', initData.value ? 'yes' : 'no')
+    if (initData.value) {
+      console.log('[Telegram Init Data Plugin] initData length:', initData.value.length)
+    }
+  } else {
+    console.warn('[Telegram Init Data Plugin] Telegram WebApp not available')
   }
 
   // Добавляем глобальный interceptor для $fetch
   globalThis.$fetch = $fetch.create({
     onRequest({ request, options }) {
-      // Добавляем initData в заголовки для всех API запросов
       const url = typeof request === 'string' ? request : request.toString()
       
+      console.log('[Telegram Init Data Plugin] Request to:', url)
+      
       if (initData.value && url.startsWith('/api/')) {
-        // Используем any для обхода строгой типизации Headers
-        (options.headers as any) = {
-          ...(options.headers || {}),
-          'x-telegram-init-data': initData.value
-        }
+        console.log('[Telegram Init Data Plugin] Adding initData to headers')
+        const headers: any = options.headers || {}
+        headers['x-telegram-init-data'] = initData.value
+        options.headers = headers
+      } else if (!initData.value && url.startsWith('/api/')) {
+        console.warn('[Telegram Init Data Plugin] No initData for API request')
       }
     }
   })
