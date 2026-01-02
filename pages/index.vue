@@ -166,12 +166,13 @@
           </div>
         </div>
 
-        <button 
+        <NuxtLink 
           v-if="achievementCount.total > 0"
-          class="mt-4 w-full text-center text-blue-600 hover:text-blue-800 font-medium text-sm"
+          to="/achievements"
+          class="mt-4 w-full block text-center text-blue-600 hover:text-blue-800 font-medium text-sm"
         >
           Посмотреть все достижения →
-        </button>
+        </NuxtLink>
       </section>
     </div>
   </div>
@@ -216,6 +217,11 @@ const error = computed(() => remindersError.value || gamificationError.value)
 const loadData = async () => {
   try {
     isLoading.value = true
+    
+    // Сначала авторизуемся (создаем пользователя если нужно)
+    await $fetch('/api/auth', { method: 'POST' })
+    
+    // Затем загружаем данные
     await Promise.all([
       fetchReminders(),
       fetchGamification()

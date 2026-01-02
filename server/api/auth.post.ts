@@ -1,104 +1,75 @@
-import { createHmac } from 'crypto'
-import { db } from '../db'
-import { users } from '../db/schema'
+import { db, schema } from '../db'
 import { eq } from 'drizzle-orm'
 
-interface TelegramUser {
-  id: number
-  first_name?: string
-  last_name?: string
-  username?: string
-  language_code?: string
-  is_premium?: boolean
-}
-
-interface AuthRequest {
-  initData: string
-}
-
+/**
+ * POST /api/auth
+ * Авторизация пользователя через Telegram
+ * Создает пользователя, если его нет в базе
+ * 
+ * Возвращает данные пользователя
+ */
 export default defineEventHandler(async (event) => {
   try {
-    const body = await readBody<AuthRequest>(event)
-    
-    if (!body.initData) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: 'Missing initData'
-      })
-    }
+    // Получить данные пользователя из Telegram контекста (установлен middleware)
+    const telegramUser = event.context.telegramUser
 
-    // Validate initData signature
-    const botToken = process.env.TELEGRAM_BOT_TOKEN
-    if (!botToken) {
-      throw createError({
-        statusCode: 500,
-        statusMessage: 'Bot token not configured'
-      })
-    }
-
-    const isValid = validateTelegramInitData(body.initData, botToken)
-    if (!isValid) {
+    if (!telegramUser || !telegramUser.id) {
       throw createError({
         statusCode: 401,
-        statusMessage: 'Invalid initData signature'
+        statusMessage: 'Unauthorized: Telegram user not found'
       })
     }
 
-    // Parse initData
-    const params = new URLSearchParams(body.initData)
-    const userParam = params.get('user')
-    
-    if (!userParam) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: 'Missing user data in initData'
-      })
-    }
-
-    const telegramUser: TelegramUser = JSON.parse(userParam)
-    
-    // Get or create user in database
-    const existingUsers = await db
+    // Проверить, существует ли пользователь
+    let [user] = await db
       .select()
-      .from(users)
-      .where(eq(users.telegramId, telegramUser.id.toString()))
+      .from(schema.users)
+      .where(eq(schema.users.id, telegramUser.id))
       .limit(1)
 
-    let user
-    if (existingUsers.length > 0) {
-      // Update existing user
-      user = existingUsers[0]
-      await db
-        .update(users)
-        .set({
-          username: telegramUser.username || null,
-          firstName: telegramUser.first_name || null,
-          lastName: telegramUser.last_name || null,
-          updatedAt: new Date()
-        })
-        .where(eq(users.id, user.id))
-    } else {
-      // Create new user
-      const newUsers = await db
-        .insert(users)
+    // Если пользователя нет, создаем нового
+    if (!user) {
+      console.log('[Auth] Creating new user:', telegramUser.id)
+      
+      const [newUser] = await db
+        .insert(schema.users)
         .values({
-          telegramId: telegramUser.id.toString(),
-          username: telegramUser.username || null,
-          firstName: telegramUser.first_name || null,
-          lastName: telegramUser.last_name || null
+          id: telegramUser.id,
+          telegramUsername: telegramUser.username || null,
+          firstName: telegramUser.first_name || '',
+          lastName: telegramUser.last_name || null,
+          languageCode: telegramUser.language_code || 'en',
+          currentStreak: 0,
+          longestStreak: 0,
+          totalXP: 0,
+          level: 1,
+          lastActivityDate: null
         })
         .returning()
+
+      user = newUser
       
-      user = newUsers[0]
+      console.log('[Auth] User created successfully:', user.id)
+    } else {
+      console.log('[Auth] Existing user found:', user.id)
+      
+      // Обновляем данные пользователя при каждом входе
+      await db
+        .update(schema.users)
+        .set({
+          telegramUsername: telegramUser.username || null,
+          firstName: telegramUser.first_name || '',
+          lastName: telegramUser.last_name || null,
+          languageCode: telegramUser.language_code || 'en'
+        })
+        .where(eq(schema.users.id, telegramUser.id))
     }
 
-    // Return user data (in a real app, you'd return a JWT or session token)
     return {
       success: true,
       user: {
         id: user.id,
-        telegramId: user.telegramId,
-        username: user.username,
+        telegramUsername: user.telegramUsername,
         firstName: user.firstName,
         lastName: user.lastName,
         currentStreak: user.currentStreak,
@@ -108,58 +79,14 @@ export default defineEventHandler(async (event) => {
       }
     }
   } catch (error: any) {
-    // If it's already a createError, rethrow it
     if (error.statusCode) {
       throw error
     }
-    
-    // Log unexpected errors
-    console.error('Authentication error:', error)
+
+    console.error('[Auth] Error:', error)
     throw createError({
       statusCode: 500,
-      statusMessage: 'Internal server error'
+      statusMessage: 'Authentication failed'
     })
   }
 })
-
-/**
- * Validates Telegram Web App initData signature
- * @param initData - The initData string from Telegram Web App
- * @param botToken - The Telegram bot token
- * @returns true if signature is valid, false otherwise
- */
-function validateTelegramInitData(initData: string, botToken: string): boolean {
-  try {
-    const params = new URLSearchParams(initData)
-    const hash = params.get('hash')
-    
-    if (!hash) {
-      return false
-    }
-
-    // Remove hash from params
-    params.delete('hash')
-    
-    // Sort params alphabetically and create data-check-string
-    const dataCheckString = Array.from(params.entries())
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([key, value]) => `${key}=${value}`)
-      .join('\n')
-
-    // Create secret key from bot token
-    const secretKey = createHmac('sha256', 'WebAppData')
-      .update(botToken)
-      .digest()
-
-    // Calculate hash
-    const calculatedHash = createHmac('sha256', secretKey)
-      .update(dataCheckString)
-      .digest('hex')
-
-    // Compare hashes
-    return calculatedHash === hash
-  } catch (error) {
-    console.error('Error validating initData:', error)
-    return false
-  }
-}
