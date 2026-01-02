@@ -19,14 +19,14 @@ import { calculateLevel, getXPForNextLevel } from '../../utils/gamification'
  */
 export default defineEventHandler(async (event) => {
   try {
-    // Получить userId из query параметров
-    const query = getQuery(event)
-    const userId = query.userId ? parseInt(query.userId as string) : null
+    // Получить userId из Telegram контекста
+    const telegramUser = event.context.telegramUser
+    const userId = telegramUser?.id
 
     if (!userId) {
       throw createError({
-        statusCode: 400,
-        statusMessage: 'Отсутствует параметр userId'
+        statusCode: 401,
+        statusMessage: 'Unauthorized: Telegram user not found'
       })
     }
 

@@ -14,14 +14,14 @@ import { getContactsDueForReminder } from '../../utils/reminders'
  */
 export default defineEventHandler(async (event) => {
   try {
-    // Получить userId из query параметров (в реальном приложении из сессии/JWT)
-    const query = getQuery(event)
-    const userId = query.userId ? parseInt(query.userId as string) : null
+    // Получить userId из Telegram контекста (установлен middleware)
+    const telegramUser = event.context.telegramUser
+    const userId = telegramUser?.id
 
     if (!userId) {
       throw createError({
-        statusCode: 400,
-        statusMessage: 'Missing userId parameter'
+        statusCode: 401,
+        statusMessage: 'Unauthorized: Telegram user not found'
       })
     }
 
