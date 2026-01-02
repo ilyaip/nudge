@@ -182,6 +182,7 @@ import { useReminders } from '~/composables/useReminders'
 import { useGamification } from '~/composables/useGamification'
 import { useActivity } from '~/composables/useActivity'
 import { useNotifications } from '~/composables/useNotifications'
+import { useAuthStore } from '~/stores/auth'
 
 // Composables
 const {
@@ -225,9 +226,32 @@ const loadData = async () => {
   try {
     isLoading.value = true
     
+    // Ждем загрузки Telegram SDK (максимум 5 секунд)
+    console.log('[Dashboard] Waiting for Telegram SDK...')
+    let attempts = 0
+    while (!window.Telegram?.WebApp?.initData && attempts < 50) {
+      await new Promise(resolve => setTimeout(resolve, 100))
+      attempts++
+    }
+    
+    if (window.Telegram?.WebApp?.initData) {
+      console.log('[Dashboard] Telegram SDK ready')
+    } else {
+      console.warn('[Dashboard] Telegram SDK not ready after 5 seconds')
+    }
+    
     // Авторизуемся (создаем пользователя если нужно)
     // initData автоматически добавляется plugin'ом
-    await $fetch('/api/auth', { method: 'POST' })
+    const authResponse = await $fetch<{ success: boolean; user: any }>('/api/auth', { method: 'POST' })
+    
+    console.log('[Dashboard] Auth response:', authResponse)
+    
+    // Сохраняем пользователя в auth store
+    if (authResponse.success && authResponse.user) {
+      const authStore = useAuthStore()
+      authStore.setUser(authResponse.user)
+      console.log('[Dashboard] User saved to store:', authResponse.user)
+    }
     
     // Затем загружаем данные
     await Promise.all([
@@ -235,8 +259,9 @@ const loadData = async () => {
       fetchGamification(),
       fetchActivity('week') // Загружаем данные активности за неделю по умолчанию
     ])
-  } catch (err) {
-    console.error('Ошибка загрузки данных dashboard:', err)
+  } catch (err: any) {
+    console.error('[Dashboard] Ошибка загрузки данных:', err)
+    console.error('[Dashboard] Error details:', err.data || err.message)
   } finally {
     isLoading.value = false
   }

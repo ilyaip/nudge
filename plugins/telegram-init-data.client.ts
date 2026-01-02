@@ -3,17 +3,42 @@
  */
 export default defineNuxtPlugin(() => {
   const initData = ref<string>('')
+  const isReady = ref(false)
 
-  // Получаем initData при инициализации
-  if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
-    initData.value = window.Telegram.WebApp.initData
-    console.log('[Telegram Init Data Plugin] Telegram WebApp available')
-    console.log('[Telegram Init Data Plugin] initData received:', initData.value ? 'yes' : 'no')
-    if (initData.value) {
-      console.log('[Telegram Init Data Plugin] initData length:', initData.value.length)
+  // Функция для получения initData
+  const getInitData = () => {
+    if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+      initData.value = window.Telegram.WebApp.initData
+      isReady.value = true
+      console.log('[Telegram Init Data Plugin] Telegram WebApp available')
+      console.log('[Telegram Init Data Plugin] initData received:', initData.value ? 'yes' : 'no')
+      if (initData.value) {
+        console.log('[Telegram Init Data Plugin] initData length:', initData.value.length)
+      }
+      return true
     }
-  } else {
-    console.warn('[Telegram Init Data Plugin] Telegram WebApp not available')
+    return false
+  }
+
+  // Пытаемся получить initData сразу
+  if (!getInitData()) {
+    console.log('[Telegram Init Data Plugin] Waiting for Telegram WebApp to load...')
+    
+    // Если не получилось, ждем загрузки скрипта
+    const checkInterval = setInterval(() => {
+      if (getInitData()) {
+        console.log('[Telegram Init Data Plugin] Telegram WebApp loaded successfully')
+        clearInterval(checkInterval)
+      }
+    }, 100)
+    
+    // Таймаут на случай, если SDK не загрузится
+    setTimeout(() => {
+      clearInterval(checkInterval)
+      if (!isReady.value) {
+        console.warn('[Telegram Init Data Plugin] Telegram WebApp failed to load after 5 seconds')
+      }
+    }, 5000)
   }
 
   // Добавляем глобальный interceptor для $fetch
@@ -36,7 +61,8 @@ export default defineNuxtPlugin(() => {
 
   return {
     provide: {
-      telegramInitData: initData
+      telegramInitData: initData,
+      telegramReady: isReady
     }
   }
 })
