@@ -1,0 +1,29 @@
+services:
+  # Nuxt приложение
+  - type: web
+    name: nudge-telegram-app
+    runtime: docker
+    plan: free
+    region: frankfurt  # Ближайший регион к России
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: nudge-postgres
+          property: connectionString
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false  # Нужно будет добавить вручную в Render Dashboard
+    healthCheckPath: /api/health
+    autoDeploy: true
+
+databases:
+  # PostgreSQL база данных
+  - name: nudge-postgres
+    plan: free
+    databaseName: nudge
+    user: nudge_user
+    region: frankfurt
+    ipAllowList: []  # Пустой список = доступ только из Render сервисов

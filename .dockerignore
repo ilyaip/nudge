@@ -1,0 +1,61 @@
+# Зависимости
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Nuxt сборка
+.nuxt
+.output
+dist
+
+# Локальные env файлы
+.env
+.env.local
+.env.*.local
+
+# Логи
+logs
+*.log
+
+# OS файлы
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+*~
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Docker
+Dockerfile
+docker-compose*.yml
+.dockerignore
+
+# Тесты
+coverage
+.nyc_output
+
+# Временные файлы
+*.tmp
+*.temp
+
+# Документация
+README.md
+docs/
+*.md
+
+# CI/CD
+.github
+.gitlab-ci.yml
+
+# Drizzle
+drizzle

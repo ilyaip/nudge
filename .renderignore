@@ -1,0 +1,27 @@
+# Файлы, которые не нужны для деплоя на Render
+
+# Документация (кроме README)
+БЫСТРЫЙ_СТАРТ.md
+БЫСТРЫЙ_ДЕПЛОЙ.md
+ДЕПЛОЙ_RENDER.md
+ЗАПУСК_ЛОКАЛЬНО.md
+ДОКУМЕНТАЦИЯ.md
+АРХИТЕКТУРА.md
+README.Docker.md
+QUICKSTART.md
+DOCKER_SETUP_COMPLETE.md
+
+# Docker файлы (Render использует свой Docker)
+docker-compose.yml
+docker-compose.dev.yml
+Makefile
+
+# Локальные файлы разработки
+.kiro/
+tests/
+*.test.ts
+vitest.config.ts
+
+# Git
+.git/
+.gitignore

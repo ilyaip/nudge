@@ -1,0 +1,79 @@
+version: '3.8'
+
+# Docker Compose для разработки с hot-reload
+
+services:
+  # PostgreSQL база данных
+  postgres:
+    image: postgres:15-alpine
+    container_name: nudge-postgres-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: nudge
+      POSTGRES_USER: nudge_user
+      POSTGRES_PASSWORD: nudge_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    networks:
+      - nudge-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nudge_user -d nudge"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Nuxt приложение в режиме разработки
+  app:
+    image: node:20-alpine
+    container_name: nudge-app-dev
+    working_dir: /app
+    command: sh -c "npm install && npm run dev"
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+      - "24678:24678"  # Vite HMR
+    environment:
+      # База данных
+      DATABASE_URL: postgresql://nudge_user:nudge_password@postgres:5432/nudge
+      # Telegram Bot
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-your_bot_token_here}
+      # Node окружение
+      NODE_ENV: development
+      # Nuxt dev server
+      NUXT_HOST: 0.0.0.0
+      NUXT_PORT: 3000
+    volumes:
+      # Монтируем весь проект для hot-reload
+      - .:/app
+      # Исключаем node_modules для производительности
+      - /app/node_modules
+      - /app/.nuxt
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - nudge-network
+
+  # Adminer - веб-интерфейс для управления БД
+  adminer:
+    image: adminer:latest
+    container_name: nudge-adminer-dev
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+    depends_on:
+      - postgres
+    networks:
+      - nudge-network
+
+networks:
+  nudge-network:
+    driver: bridge
+
+volumes:
+  postgres_dev_data:
+    driver: local
