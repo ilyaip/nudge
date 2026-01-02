@@ -17,14 +17,18 @@ export default defineEventHandler(async (event) => {
     const initData = getHeader(event, 'x-telegram-init-data') || 
                      getQuery(event).initData as string
 
+    // В development режиме или если нет initData, используем тестового пользователя
+    const isDevelopment = process.env.NODE_ENV !== 'production'
+    
     if (!initData) {
-      // В development режиме используем тестового пользователя
-      if (process.env.NODE_ENV === 'development') {
+      if (isDevelopment) {
+        console.log('[Telegram Auth] Using test user in development mode')
         event.context.telegramUser = {
           id: 1,
           first_name: 'Test',
           last_name: 'User',
-          username: 'testuser'
+          username: 'testuser',
+          language_code: 'ru'
         }
         return
       }
@@ -40,9 +44,17 @@ export default defineEventHandler(async (event) => {
     const hash = params.get('hash')
     params.delete('hash')
 
-    // Проверяем подпись (в production)
-    if (process.env.NODE_ENV === 'production') {
+    // Проверяем подпись только в production
+    if (!isDevelopment) {
       const botToken = process.env.TELEGRAM_BOT_TOKEN || ''
+      
+      if (!botToken) {
+        throw createError({
+          statusCode: 500,
+          statusMessage: 'Bot token not configured'
+        })
+      }
+      
       const secretKey = createHmac('sha256', 'WebAppData').update(botToken).digest()
       
       const dataCheckString = Array.from(params.entries())
@@ -73,17 +85,25 @@ export default defineEventHandler(async (event) => {
 
     const telegramUser = JSON.parse(userJson)
     
+    console.log('[Telegram Auth] User authenticated:', {
+      id: telegramUser.id,
+      username: telegramUser.username,
+      first_name: telegramUser.first_name
+    })
+    
     // Сохраняем пользователя в контексте запроса
     event.context.telegramUser = telegramUser
     
   } catch (error: any) {
     // В development режиме используем тестового пользователя при ошибке
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('[Telegram Auth] Error, falling back to test user:', error.message)
       event.context.telegramUser = {
         id: 1,
         first_name: 'Test',
         last_name: 'User',
-        username: 'testuser'
+        username: 'testuser',
+        language_code: 'ru'
       }
       return
     }
@@ -92,7 +112,7 @@ export default defineEventHandler(async (event) => {
       throw error
     }
 
-    console.error('Telegram auth error:', error)
+    console.error('[Telegram Auth] Authentication failed:', error)
     throw createError({
       statusCode: 500,
       statusMessage: 'Authentication failed'
