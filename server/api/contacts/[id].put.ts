@@ -1,9 +1,8 @@
-import { db } from '../../db'
+import { db, schema } from '../../db'
 import { contacts } from '../../db/schema'
 import { eq, and } from 'drizzle-orm'
 
 interface UpdateContactRequest {
-  userId: number
   name?: string
   username?: string
   isTracked?: boolean
@@ -31,10 +30,28 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    if (!body.userId) {
+    // Получить Telegram ID из контекста
+    const telegramUser = event.context.telegramUser
+    const telegramId = telegramUser?.id
+
+    if (!telegramId) {
       throw createError({
-        statusCode: 400,
-        statusMessage: 'Missing userId'
+        statusCode: 401,
+        statusMessage: 'Unauthorized: Telegram user not found'
+      })
+    }
+
+    // Найти пользователя по Telegram ID
+    const [user] = await db
+      .select()
+      .from(schema.users)
+      .where(eq(schema.users.telegramId, String(telegramId)))
+      .limit(1)
+
+    if (!user) {
+      throw createError({
+        statusCode: 404,
+        statusMessage: 'Пользователь не найден'
       })
     }
 
@@ -46,13 +63,13 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    // Проверить существование контакта и принадлежность пользователю
+    // Проверить существование контакта и принадлежность пользователю (используем database user.id)
     const existingContacts = await db
       .select()
       .from(contacts)
       .where(and(
         eq(contacts.id, contactId),
-        eq(contacts.userId, body.userId)
+        eq(contacts.userId, user.id)
       ))
       .limit(1)
 

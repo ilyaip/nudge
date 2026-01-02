@@ -1,8 +1,8 @@
-import { db } from '../../db'
+import { db, schema } from '../../db'
 import { contacts, type NewContact } from '../../db/schema'
+import { eq } from 'drizzle-orm'
 
 interface CreateContactRequest {
-  userId: number
   telegramContactId: string
   name: string
   username?: string
@@ -22,11 +22,36 @@ export default defineEventHandler(async (event) => {
   try {
     const body = await readBody<CreateContactRequest>(event)
 
+    // Получить Telegram ID из контекста
+    const telegramUser = event.context.telegramUser
+    const telegramId = telegramUser?.id
+
+    if (!telegramId) {
+      throw createError({
+        statusCode: 401,
+        statusMessage: 'Unauthorized: Telegram user not found'
+      })
+    }
+
+    // Найти пользователя по Telegram ID
+    const [user] = await db
+      .select()
+      .from(schema.users)
+      .where(eq(schema.users.telegramId, String(telegramId)))
+      .limit(1)
+
+    if (!user) {
+      throw createError({
+        statusCode: 404,
+        statusMessage: 'Пользователь не найден'
+      })
+    }
+
     // Валидация обязательных полей
-    if (!body.userId || !body.telegramContactId || !body.name) {
+    if (!body.telegramContactId || !body.name) {
       throw createError({
         statusCode: 400,
-        statusMessage: 'Missing required fields: userId, telegramContactId, name'
+        statusMessage: 'Missing required fields: telegramContactId, name'
       })
     }
 
@@ -65,9 +90,9 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    // Создать новый контакт
+    // Создать новый контакт (используем database user.id)
     const newContact: NewContact = {
-      userId: body.userId,
+      userId: user.id,
       telegramContactId: body.telegramContactId,
       name: body.name,
       username: body.username || null,

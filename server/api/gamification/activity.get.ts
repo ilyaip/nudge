@@ -1,3 +1,5 @@
+import { db, schema } from '../../db'
+import { eq } from 'drizzle-orm'
 import { aggregateActivity, type ActivityPeriod } from '../../utils/activity'
 
 /**
@@ -20,14 +22,28 @@ import { aggregateActivity, type ActivityPeriod } from '../../utils/activity'
  */
 export default defineEventHandler(async (event) => {
   try {
-    // Получить userId из Telegram контекста
+    // Получить Telegram ID из контекста
     const telegramUser = event.context.telegramUser
-    const userId = telegramUser?.id
+    const telegramId = telegramUser?.id
 
-    if (!userId) {
+    if (!telegramId) {
       throw createError({
         statusCode: 401,
         statusMessage: 'Unauthorized: Telegram user not found'
+      })
+    }
+
+    // Найти пользователя по Telegram ID
+    const [user] = await db
+      .select()
+      .from(schema.users)
+      .where(eq(schema.users.telegramId, String(telegramId)))
+      .limit(1)
+
+    if (!user) {
+      throw createError({
+        statusCode: 404,
+        statusMessage: 'Пользователь не найден'
       })
     }
 
@@ -43,8 +59,8 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    // Получить агрегированные данные активности
-    const activityData = await aggregateActivity(userId, period)
+    // Получить агрегированные данные активности (используем database user.id)
+    const activityData = await aggregateActivity(user.id, period)
 
     return {
       success: true,

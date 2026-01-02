@@ -1,4 +1,4 @@
-import { db } from '../../db'
+import { db, schema } from '../../db'
 import { contacts } from '../../db/schema'
 import { eq } from 'drizzle-orm'
 
@@ -8,80 +8,36 @@ import { eq } from 'drizzle-orm'
  */
 export default defineEventHandler(async (event) => {
   try {
-    // Получить userId из query параметров (в реальном приложении из сессии/JWT)
-    const query = getQuery(event)
-    const userId = query.userId ? parseInt(query.userId as string) : null
+    // Получить Telegram ID из контекста
+    const telegramUser = event.context.telegramUser
+    const telegramId = telegramUser?.id
 
-    if (!userId) {
+    if (!telegramId) {
       throw createError({
-        statusCode: 400,
-        statusMessage: 'Missing userId parameter'
+        statusCode: 401,
+        statusMessage: 'Unauthorized: Telegram user not found'
       })
     }
 
-    // MOCK DATA для тестирования без БД
-    // Раскомментируй это, если хочешь запустить без PostgreSQL:
-    /*
-    return {
-      success: true,
-      contacts: [
-        {
-          id: 1,
-          userId: userId,
-          telegramContactId: '123456',
-          name: 'Иван Иванов',
-          username: 'ivan_ivanov',
-          isTracked: true,
-          frequency: 'weekly',
-          customFrequencyDays: null,
-          communicationType: 'message',
-          category: 'friends',
-          lastContactDate: new Date('2024-12-25'),
-          nextReminderDate: new Date('2025-01-08'),
-          createdAt: new Date('2024-12-01'),
-          updatedAt: new Date('2024-12-25')
-        },
-        {
-          id: 2,
-          userId: userId,
-          telegramContactId: '789012',
-          name: 'Мария Петрова',
-          username: 'maria_p',
-          isTracked: true,
-          frequency: 'monthly',
-          customFrequencyDays: null,
-          communicationType: 'call',
-          category: 'family',
-          lastContactDate: new Date('2024-12-20'),
-          nextReminderDate: new Date('2025-01-20'),
-          createdAt: new Date('2024-11-15'),
-          updatedAt: new Date('2024-12-20')
-        },
-        {
-          id: 3,
-          userId: userId,
-          telegramContactId: '345678',
-          name: 'Алексей Сидоров',
-          username: null,
-          isTracked: false,
-          frequency: 'monthly',
-          customFrequencyDays: null,
-          communicationType: 'message',
-          category: 'colleagues',
-          lastContactDate: null,
-          nextReminderDate: null,
-          createdAt: new Date('2024-12-28'),
-          updatedAt: new Date('2024-12-28')
-        }
-      ]
-    }
-    */
+    // Найти пользователя по Telegram ID
+    const [user] = await db
+      .select()
+      .from(schema.users)
+      .where(eq(schema.users.telegramId, String(telegramId)))
+      .limit(1)
 
-    // Получить все контакты пользователя
+    if (!user) {
+      throw createError({
+        statusCode: 404,
+        statusMessage: 'Пользователь не найден'
+      })
+    }
+
+    // Получить все контакты пользователя (используем database user.id)
     const userContacts = await db
       .select()
       .from(contacts)
-      .where(eq(contacts.userId, userId))
+      .where(eq(contacts.userId, user.id))
       .orderBy(contacts.name)
 
     return {

@@ -19,22 +19,22 @@ import { calculateLevel, getXPForNextLevel } from '../../utils/gamification'
  */
 export default defineEventHandler(async (event) => {
   try {
-    // Получить userId из Telegram контекста
+    // Получить Telegram ID из контекста
     const telegramUser = event.context.telegramUser
-    const userId = telegramUser?.id
+    const telegramId = telegramUser?.id
 
-    if (!userId) {
+    if (!telegramId) {
       throw createError({
         statusCode: 401,
         statusMessage: 'Unauthorized: Telegram user not found'
       })
     }
 
-    // Получить данные пользователя
+    // Найти пользователя по Telegram ID
     const [user] = await db
       .select()
       .from(schema.users)
-      .where(eq(schema.users.id, userId))
+      .where(eq(schema.users.telegramId, String(telegramId)))
       .limit(1)
 
     if (!user) {

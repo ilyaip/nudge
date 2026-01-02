@@ -121,9 +121,9 @@ export const useContacts = () => {
         return
       }
 
+      // userId больше не нужен в query - используется Telegram auth из middleware
       const data = await $fetch<{ contacts: Contact[] }>('/api/contacts', {
-        method: 'GET',
-        query: { userId }
+        method: 'GET'
       })
 
       contacts.value = data.contacts || []
@@ -153,9 +153,9 @@ export const useContacts = () => {
         throw new Error('Пользователь не авторизован')
       }
 
+      // userId больше не нужен в query - используется Telegram auth из middleware
       const data = await $fetch<{ contact: Contact }>(`/api/contacts/${contactId}`, {
-        method: 'GET',
-        query: { userId }
+        method: 'GET'
       })
 
       currentContact.value = data.contact
@@ -183,12 +183,10 @@ export const useContacts = () => {
         throw new Error('Пользователь не авторизован')
       }
 
+      // userId больше не нужен в body - используется Telegram auth из middleware
       const data = await $fetch<{ contact: Contact }>('/api/contacts', {
         method: 'POST',
-        body: {
-          userId,
-          ...contactData
-        }
+        body: contactData
       })
 
       // Добавить новый контакт в локальное состояние
@@ -248,12 +246,10 @@ export const useContacts = () => {
         throw new Error('Пользователь не авторизован')
       }
 
+      // userId больше не нужен в body - используется Telegram auth из middleware
       const data = await $fetch<{ contact: Contact }>(`/api/contacts/${contactId}`, {
         method: 'PUT',
-        body: {
-          userId,
-          ...updateData
-        }
+        body: updateData
       })
 
       // Обновляем с реальными данными с сервера
@@ -302,9 +298,9 @@ export const useContacts = () => {
         throw new Error('Пользователь не авторизован')
       }
 
+      // userId больше не нужен в query - используется Telegram auth из middleware
       await $fetch(`/api/contacts/${contactId}`, {
-        method: 'DELETE',
-        query: { userId }
+        method: 'DELETE'
       })
 
       // Удалить контакт из локального состояния

@@ -1,4 +1,4 @@
-import { db } from '../../db'
+import { db, schema } from '../../db'
 import { reminders, contacts } from '../../db/schema'
 import { eq, and } from 'drizzle-orm'
 import { getContactsDueForReminder } from '../../utils/reminders'
@@ -14,24 +14,38 @@ import { getContactsDueForReminder } from '../../utils/reminders'
  */
 export default defineEventHandler(async (event) => {
   try {
-    // Получить userId из Telegram контекста (установлен middleware)
+    // Получить Telegram ID из контекста (установлен middleware)
     const telegramUser = event.context.telegramUser
-    const userId = telegramUser?.id
+    const telegramId = telegramUser?.id
 
-    if (!userId) {
+    if (!telegramId) {
       throw createError({
         statusCode: 401,
         statusMessage: 'Unauthorized: Telegram user not found'
       })
     }
 
-    // Получить все отслеживаемые контакты пользователя
+    // Найти пользователя по Telegram ID
+    const [user] = await db
+      .select()
+      .from(schema.users)
+      .where(eq(schema.users.telegramId, String(telegramId)))
+      .limit(1)
+
+    if (!user) {
+      throw createError({
+        statusCode: 404,
+        statusMessage: 'Пользователь не найден'
+      })
+    }
+
+    // Получить все отслеживаемые контакты пользователя (используем database user.id)
     const userContacts = await db
       .select()
       .from(contacts)
       .where(
         and(
-          eq(contacts.userId, userId),
+          eq(contacts.userId, user.id),
           eq(contacts.isTracked, true)
         )
       )
@@ -52,7 +66,7 @@ export default defineEventHandler(async (event) => {
       .from(reminders)
       .where(
         and(
-          eq(reminders.userId, userId),
+          eq(reminders.userId, user.id),
           eq(reminders.completed, false)
         )
       )
@@ -73,7 +87,7 @@ export default defineEventHandler(async (event) => {
         const [newReminder] = await db
           .insert(reminders)
           .values({
-            userId,
+            userId: user.id,
             contactId: contact.id,
             dueDate: todayStart,
             completed: false,
