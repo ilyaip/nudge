@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50 p-4">
+  <div class="min-h-screen bg-gray-50 p-4 pb-20">
     <!-- Состояние загрузки -->
     <SkeletonLoader 
       v-if="isLoading && !currentContact" 
@@ -287,6 +287,9 @@
         </div>
       </section>
     </div>
+
+    <!-- Нижняя навигация -->
+    <BottomNav />
   </div>
 </template>
 
