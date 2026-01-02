@@ -245,6 +245,13 @@
         </div>
       </section>
     </div>
+
+    <!-- Модальное окно добавления контакта -->
+    <AddContactModal
+      :is-open="isAddModalOpen"
+      @close="isAddModalOpen = false"
+      @submit="handleContactSubmit"
+    />
   </div>
 </template>
 
@@ -262,6 +269,7 @@ const {
   error,
   contactCount,
   fetchContacts,
+  createContact,
   clearError
 } = useContacts()
 
@@ -321,9 +329,27 @@ const navigateToContact = (contactId: number) => {
 /**
  * Обработать добавление контакта
  */
+const isAddModalOpen = ref(false)
+
 const handleAddContact = () => {
-  // TODO: Открыть модальное окно или перейти на страницу добавления
-  alert('Функция добавления контакта будет реализована позже')
+  isAddModalOpen.value = true
+}
+
+/**
+ * Обработать отправку формы добавления контакта
+ */
+const handleContactSubmit = async (contactData: any) => {
+  try {
+    await createContact(contactData)
+    isAddModalOpen.value = false
+    
+    // Показываем уведомление об успехе
+    // TODO: Добавить toast notification
+    console.log('Контакт успешно добавлен')
+  } catch (err) {
+    console.error('Ошибка добавления контакта:', err)
+    // Ошибка уже обработана в composable
+  }
 }
 
 /**
