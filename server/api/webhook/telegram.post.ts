@@ -1,5 +1,5 @@
 import { db, schema } from '../../db'
-import { eq } from 'drizzle-orm'
+import { eq, and } from 'drizzle-orm'
 
 /**
  * POST /api/webhook/telegram
@@ -79,11 +79,14 @@ export default defineEventHandler(async (event) => {
         return { ok: true }
       }
 
-      // Проверить, не добавлен ли уже этот контакт
+      // Проверить, не добавлен ли уже этот контакт ЭТИМ пользователем
       const [existingContact] = await db
         .select()
         .from(schema.contacts)
-        .where(eq(schema.contacts.telegramContactId, String(contact.user_id)))
+        .where(and(
+          eq(schema.contacts.userId, user.id),
+          eq(schema.contacts.telegramContactId, String(contact.user_id))
+        ))
         .limit(1)
 
       if (existingContact) {
