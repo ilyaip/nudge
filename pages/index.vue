@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50 p-4">
+  <div class="min-h-screen bg-gray-50 p-4 pb-20">
     <!-- Заголовок -->
     <header class="mb-6">
       <h1 class="text-3xl font-bold text-gray-900">Dashboard</h1>
@@ -173,6 +173,9 @@
         </NuxtLink>
       </section>
     </div>
+
+    <!-- Нижняя навигация -->
+    <BottomNav />
   </div>
 </template>
 

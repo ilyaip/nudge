@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50 p-4">
+  <div class="min-h-screen bg-gray-50 p-4 pb-20">
     <!-- Заголовок -->
     <header class="mb-6">
       <div class="flex items-center justify-between">
@@ -252,6 +252,9 @@
       @close="isAddModalOpen = false"
       @submit="handleContactSubmit"
     />
+
+    <!-- Нижняя навигация -->
+    <BottomNav />
   </div>
 </template>
 
