@@ -20,20 +20,22 @@
     </header>
 
     <!-- Состояние загрузки -->
-    <div v-if="isLoading && contacts.length === 0" class="flex justify-center items-center py-12">
-      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-    </div>
+    <SkeletonLoader 
+      v-if="isLoading && contacts.length === 0" 
+      type="card" 
+      :count="5" 
+      show-header 
+    />
 
     <!-- Ошибка -->
-    <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-      <p class="text-red-800">{{ error }}</p>
-      <button 
-        @click="loadContacts" 
-        class="mt-2 text-red-600 hover:text-red-800 underline"
-      >
-        Попробовать снова
-      </button>
-    </div>
+    <ErrorMessage
+      v-else-if="error"
+      :message="error"
+      title="Ошибка загрузки контактов"
+      type="error"
+      retryable
+      :on-retry="loadContacts"
+    />
 
     <!-- Основной контент -->
     <div v-else class="space-y-4">

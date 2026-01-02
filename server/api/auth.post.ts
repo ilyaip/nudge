@@ -24,7 +24,7 @@ export default defineEventHandler(async (event) => {
     let [user] = await db
       .select()
       .from(schema.users)
-      .where(eq(schema.users.id, telegramUser.id))
+      .where(eq(schema.users.telegramId, String(telegramUser.id)))
       .limit(1)
 
     // Если пользователя нет, создаем нового
@@ -34,11 +34,10 @@ export default defineEventHandler(async (event) => {
       const [newUser] = await db
         .insert(schema.users)
         .values({
-          id: telegramUser.id,
-          telegramUsername: telegramUser.username || null,
+          telegramId: String(telegramUser.id),
+          username: telegramUser.username || null,
           firstName: telegramUser.first_name || '',
           lastName: telegramUser.last_name || null,
-          languageCode: telegramUser.language_code || 'en',
           currentStreak: 0,
           longestStreak: 0,
           totalXP: 0,
@@ -57,19 +56,18 @@ export default defineEventHandler(async (event) => {
       await db
         .update(schema.users)
         .set({
-          telegramUsername: telegramUser.username || null,
+          username: telegramUser.username || null,
           firstName: telegramUser.first_name || '',
-          lastName: telegramUser.last_name || null,
-          languageCode: telegramUser.language_code || 'en'
+          lastName: telegramUser.last_name || null
         })
-        .where(eq(schema.users.id, telegramUser.id))
+        .where(eq(schema.users.telegramId, String(telegramUser.id)))
     }
 
     return {
       success: true,
       user: {
         id: user.id,
-        telegramUsername: user.telegramUsername,
+        username: user.username,
         firstName: user.firstName,
         lastName: user.lastName,
         currentStreak: user.currentStreak,

@@ -1,20 +1,22 @@
 <template>
   <div class="min-h-screen bg-gray-50 p-4">
     <!-- Состояние загрузки -->
-    <div v-if="isLoading && !currentContact" class="flex justify-center items-center py-12">
-      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-    </div>
+    <SkeletonLoader 
+      v-if="isLoading && !currentContact" 
+      type="card" 
+      :count="3" 
+      show-header 
+    />
 
     <!-- Ошибка -->
-    <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-      <p class="text-red-800">{{ error }}</p>
-      <button 
-        @click="loadContact" 
-        class="mt-2 text-red-600 hover:text-red-800 underline"
-      >
-        Попробовать снова
-      </button>
-    </div>
+    <ErrorMessage
+      v-else-if="error"
+      :message="error"
+      title="Ошибка загрузки контакта"
+      type="error"
+      retryable
+      :on-retry="loadContact"
+    />
 
     <!-- Основной контент -->
     <div v-else-if="currentContact" class="space-y-6">
@@ -258,15 +260,16 @@
             <button
               type="submit"
               :disabled="isSaving"
-              class="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+              class="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
             >
-              {{ isSaving ? 'Сохранение...' : 'Сохранить изменения' }}
+              <LoadingSpinner v-if="isSaving" size="small" color="white" />
+              <span>{{ isSaving ? 'Сохранение...' : 'Сохранить изменения' }}</span>
             </button>
             <button
               type="button"
               @click="resetForm"
               :disabled="isSaving"
-              class="px-6 py-3 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 text-gray-700 rounded-lg font-medium transition-colors"
+              class="px-6 py-3 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 disabled:cursor-not-allowed text-gray-700 rounded-lg font-medium transition-colors"
             >
               Отменить
             </button>
@@ -288,14 +291,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useContacts, type UpdateContactData } from '~/composables/useContacts'
+import { useNotifications } from '~/composables/useNotifications'
 
 const router = useRouter()
 const route = useRoute()
 
-// Composable
+// Composables
 const {
   currentContact,
   isLoading,
@@ -306,6 +310,8 @@ const {
   clearCurrentContact,
   clearError
 } = useContacts()
+
+const { showSuccess, showError } = useNotifications()
 
 // Локальное состояние
 const isSaving = ref(false)
@@ -383,10 +389,13 @@ const handleSave = async () => {
     await updateContact(currentContact.value.id, updateData)
     
     // Показать уведомление об успехе
-    alert('Настройки контакта успешно сохранены!')
-  } catch (err) {
+    showSuccess('Настройки контакта успешно сохранены', 'Сохранено')
+  } catch (err: any) {
     console.error('Ошибка сохранения контакта:', err)
-    alert('Не удалось сохранить изменения. Попробуйте еще раз.')
+    showError(
+      err.data?.statusMessage || err.message || 'Не удалось сохранить изменения. Попробуйте еще раз.',
+      'Ошибка сохранения'
+    )
   } finally {
     isSaving.value = false
   }
@@ -423,11 +432,17 @@ const handleDelete = async () => {
     isDeleting.value = true
     await deleteContact(currentContact.value.id)
     
+    // Показать уведомление об успехе
+    showSuccess('Контакт успешно удален', 'Удалено')
+    
     // Вернуться на страницу списка контактов
     router.push('/contacts')
-  } catch (err) {
+  } catch (err: any) {
     console.error('Ошибка удаления контакта:', err)
-    alert('Не удалось удалить контакт. Попробуйте еще раз.')
+    showError(
+      err.data?.statusMessage || err.message || 'Не удалось удалить контакт. Попробуйте еще раз.',
+      'Ошибка удаления'
+    )
   } finally {
     isDeleting.value = false
   }

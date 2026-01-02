@@ -68,6 +68,22 @@ export const useReminders = () => {
    * @param reminderId - ID напоминания
    */
   const completeReminder = async (reminderId: number) => {
+    // Оптимистичное обновление: сразу обновляем UI
+    const reminderIndex = reminders.value.findIndex(r => r.id === reminderId)
+    let previousState: Reminder | null = null
+    
+    if (reminderIndex !== -1) {
+      // Сохраняем предыдущее состояние для отката в случае ошибки
+      previousState = { ...reminders.value[reminderIndex] }
+      
+      // Оптимистично обновляем состояние
+      reminders.value[reminderIndex] = {
+        ...reminders.value[reminderIndex],
+        completed: true,
+        completedAt: new Date().toISOString()
+      }
+    }
+
     try {
       isLoading.value = true
       error.value = null
@@ -76,19 +92,14 @@ export const useReminders = () => {
         method: 'POST'
       })
 
-      // Обновить локальное состояние после завершения
-      const reminderIndex = reminders.value.findIndex(r => r.id === reminderId)
-      if (reminderIndex !== -1) {
-        reminders.value[reminderIndex] = {
-          ...reminders.value[reminderIndex],
-          completed: true,
-          completedAt: new Date().toISOString()
-        }
-      }
-
-      // Перезагрузить напоминания для получения обновленных данных
+      // Перезагрузить напоминания для получения обновленных данных с сервера
       await fetchReminders()
     } catch (err: any) {
+      // Откатываем оптимистичное обновление в случае ошибки
+      if (previousState && reminderIndex !== -1) {
+        reminders.value[reminderIndex] = previousState
+      }
+      
       error.value = err.data?.statusMessage || err.message || 'Не удалось завершить напоминание'
       console.error('Ошибка завершения напоминания:', err)
       throw err

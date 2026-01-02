@@ -1,5 +1,6 @@
 import { ref, computed } from 'vue'
 import { useAuthStore } from '~/stores/auth'
+import { useCache } from '~/composables/useCache'
 
 /**
  * Интерфейс контакта
@@ -57,6 +58,7 @@ export interface UpdateContactData {
  */
 export const useContacts = () => {
   const authStore = useAuthStore()
+  const { get: getCache, set: setCache, invalidate } = useCache()
 
   // Состояние
   const contacts = ref<Contact[]>([])
@@ -109,12 +111,25 @@ export const useContacts = () => {
         throw new Error('Пользователь не авторизован')
       }
 
+      // Проверяем кэш
+      const cacheKey = `contacts-${userId}`
+      const cached = getCache<Contact[]>(cacheKey)
+      
+      if (cached) {
+        contacts.value = cached
+        isLoading.value = false
+        return
+      }
+
       const data = await $fetch<{ contacts: Contact[] }>('/api/contacts', {
         method: 'GET',
         query: { userId }
       })
 
       contacts.value = data.contacts || []
+      
+      // Сохраняем в кэш на 5 минут
+      setCache(cacheKey, contacts.value, 5 * 60 * 1000)
     } catch (err: any) {
       error.value = err.data?.statusMessage || err.message || 'Не удалось загрузить контакты'
       console.error('Ошибка загрузки контактов:', err)
@@ -179,6 +194,9 @@ export const useContacts = () => {
       // Добавить новый контакт в локальное состояние
       contacts.value.push(data.contact)
       
+      // Инвалидируем кэш контактов
+      invalidate(`contacts-${userId}`)
+      
       return data.contact
     } catch (err: any) {
       error.value = err.data?.statusMessage || err.message || 'Не удалось создать контакт'
@@ -195,6 +213,32 @@ export const useContacts = () => {
    * @param updateData - Данные для обновления
    */
   const updateContact = async (contactId: number, updateData: UpdateContactData) => {
+    // Оптимистичное обновление: сразу обновляем UI
+    const index = contacts.value.findIndex(c => c.id === contactId)
+    let previousContact: Contact | null = null
+    let previousCurrentContact: Contact | null = null
+    
+    if (index !== -1) {
+      // Сохраняем предыдущее состояние для отката
+      previousContact = { ...contacts.value[index] }
+      
+      // Оптимистично обновляем состояние
+      contacts.value[index] = {
+        ...contacts.value[index],
+        ...updateData,
+        updatedAt: new Date().toISOString()
+      }
+    }
+    
+    if (currentContact.value?.id === contactId) {
+      previousCurrentContact = { ...currentContact.value }
+      currentContact.value = {
+        ...currentContact.value,
+        ...updateData,
+        updatedAt: new Date().toISOString()
+      }
+    }
+
     try {
       isLoading.value = true
       error.value = null
@@ -212,19 +256,31 @@ export const useContacts = () => {
         }
       })
 
-      // Обновить контакт в локальном состоянии
-      const index = contacts.value.findIndex(c => c.id === contactId)
+      // Обновляем с реальными данными с сервера
       if (index !== -1) {
         contacts.value[index] = data.contact
       }
 
-      // Обновить текущий контакт, если это он
       if (currentContact.value?.id === contactId) {
         currentContact.value = data.contact
+      }
+      
+      // Инвалидируем кэш контактов
+      const userId = authStore.user?.id
+      if (userId) {
+        invalidate(`contacts-${userId}`)
       }
 
       return data.contact
     } catch (err: any) {
+      // Откатываем оптимистичное обновление в случае ошибки
+      if (previousContact && index !== -1) {
+        contacts.value[index] = previousContact
+      }
+      if (previousCurrentContact && currentContact.value?.id === contactId) {
+        currentContact.value = previousCurrentContact
+      }
+      
       error.value = err.data?.statusMessage || err.message || 'Не удалось обновить контакт'
       console.error('Ошибка обновления контакта:', err)
       throw err
@@ -259,6 +315,9 @@ export const useContacts = () => {
       if (currentContact.value?.id === contactId) {
         currentContact.value = null
       }
+      
+      // Инвалидируем кэш контактов
+      invalidate(`contacts-${userId}`)
     } catch (err: any) {
       error.value = err.data?.statusMessage || err.message || 'Не удалось удалить контакт'
       console.error('Ошибка удаления контакта:', err)

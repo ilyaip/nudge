@@ -2,6 +2,7 @@ import { drizzle } from 'drizzle-orm/postgres-js'
 import { migrate } from 'drizzle-orm/postgres-js/migrator'
 import postgres from 'postgres'
 import * as dotenv from 'dotenv'
+import { seedAchievements } from './seeds/achievements'
 
 dotenv.config()
 
@@ -20,6 +21,11 @@ async function main() {
   await migrate(db, { migrationsFolder: './server/db/migrations' })
   
   console.log('Migrations completed successfully!')
+  
+  // Загрузить seed-данные для достижений
+  console.log('Loading achievement seeds...')
+  await seedAchievements()
+  console.log('Achievement seeds loaded successfully!')
   
   await client.end()
 }

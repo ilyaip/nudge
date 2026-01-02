@@ -7,20 +7,23 @@
     </header>
 
     <!-- Состояние загрузки -->
-    <div v-if="isLoading" class="flex justify-center items-center py-12">
-      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-    </div>
+    <SkeletonLoader 
+      v-if="isLoading" 
+      type="stats" 
+      :count="1" 
+      show-header 
+      class="space-y-6"
+    />
 
     <!-- Ошибка -->
-    <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-      <p class="text-red-800">{{ error }}</p>
-      <button 
-        @click="loadData" 
-        class="mt-2 text-red-600 hover:text-red-800 underline"
-      >
-        Попробовать снова
-      </button>
-    </div>
+    <ErrorMessage
+      v-else-if="error"
+      :message="error"
+      title="Ошибка загрузки данных"
+      type="error"
+      retryable
+      :on-retry="loadData"
+    />
 
     <!-- Основной контент -->
     <div v-else class="space-y-6">
@@ -119,25 +122,20 @@
               <button
                 @click="handleCompleteReminder(reminder.id)"
                 :disabled="isCompletingReminder"
-                class="ml-4 bg-green-500 hover:bg-green-600 disabled:bg-gray-300 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
+                class="ml-4 bg-green-500 hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
               >
-                <span v-if="isCompletingReminder">⏳</span>
+                <LoadingSpinner v-if="isCompletingReminder" size="small" color="white" />
                 <span v-else>✓</span>
-                <span>Готово</span>
+                <span>{{ isCompletingReminder ? 'Сохранение...' : 'Готово' }}</span>
               </button>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- График активности (заглушка) -->
+      <!-- График активности -->
       <section class="bg-white rounded-lg shadow-md p-6">
-        <h2 class="text-xl font-semibold text-gray-900 mb-4">Активность</h2>
-        <div class="text-center py-12 bg-gray-50 rounded-lg">
-          <div class="text-5xl mb-3">📊</div>
-          <p class="text-gray-600">График активности</p>
-          <p class="text-sm text-gray-500 mt-1">Будет реализован в следующих задачах</p>
-        </div>
+        <ActivityChart />
       </section>
 
       <!-- Достижения (краткий обзор) -->
@@ -182,6 +180,8 @@
 import { ref, computed, onMounted } from 'vue'
 import { useReminders } from '~/composables/useReminders'
 import { useGamification } from '~/composables/useGamification'
+import { useActivity } from '~/composables/useActivity'
+import { useNotifications } from '~/composables/useNotifications'
 
 // Composables
 const {
@@ -206,10 +206,17 @@ const {
   error: gamificationError
 } = useGamification()
 
+const {
+  fetchActivity,
+  error: activityError
+} = useActivity()
+
+const { showSuccess, showError } = useNotifications()
+
 // Локальное состояние
 const isLoading = ref(false)
 const isCompletingReminder = ref(false)
-const error = computed(() => remindersError.value || gamificationError.value)
+const error = computed(() => remindersError.value || gamificationError.value || activityError.value)
 
 /**
  * Загрузить все данные для dashboard
@@ -224,7 +231,8 @@ const loadData = async () => {
     // Затем загружаем данные
     await Promise.all([
       fetchReminders(),
-      fetchGamification()
+      fetchGamification(),
+      fetchActivity('week') // Загружаем данные активности за неделю по умолчанию
     ])
   } catch (err) {
     console.error('Ошибка загрузки данных dashboard:', err)
@@ -242,8 +250,15 @@ const handleCompleteReminder = async (reminderId: number) => {
     await completeReminder(reminderId)
     // Обновить статистику после завершения
     await fetchGamification()
-  } catch (err) {
+    
+    // Показать уведомление об успехе
+    showSuccess('Напоминание отмечено как выполненное', 'Отлично!')
+  } catch (err: any) {
     console.error('Ошибка завершения напоминания:', err)
+    showError(
+      err.data?.statusMessage || err.message || 'Не удалось завершить напоминание',
+      'Ошибка'
+    )
   } finally {
     isCompletingReminder.value = false
   }

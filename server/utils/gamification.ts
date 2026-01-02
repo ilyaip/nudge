@@ -1,5 +1,5 @@
 import { db, schema } from '../db'
-import { eq } from 'drizzle-orm'
+import { eq, and } from 'drizzle-orm'
 import type { User } from '../db/schema'
 
 /**
@@ -220,8 +220,12 @@ async function meetsAchievementCriteria(userId: number, achievement: any): Promi
     const completedReminders = await db
       .select()
       .from(schema.reminders)
-      .where(eq(schema.reminders.userId, userId))
-      .where(eq(schema.reminders.completed, true))
+      .where(
+        and(
+          eq(schema.reminders.userId, userId),
+          eq(schema.reminders.completed, true)
+        )
+      )
     
     if (completedReminders.length < criteria.minRemindersCompleted) {
       return false
@@ -243,8 +247,12 @@ export async function unlockAchievement(userId: number, achievementId: number) {
   const existing = await db
     .select()
     .from(schema.userAchievements)
-    .where(eq(schema.userAchievements.userId, userId))
-    .where(eq(schema.userAchievements.achievementId, achievementId))
+    .where(
+      and(
+        eq(schema.userAchievements.userId, userId),
+        eq(schema.userAchievements.achievementId, achievementId)
+      )
+    )
     .limit(1)
 
   if (existing.length > 0) {
