@@ -15,11 +15,11 @@ export default defineConfig({
     },
     // Устанавливаем переменные окружения для тестов
     env: {
-      // Для тестов используем localhost вместо postgres (имя контейнера)
+      // Для интеграционных тестов используем localhost вместо postgres (имя контейнера)
       DATABASE_URL: 'postgresql://nudge_user:nudge_password@localhost:5432/nudge',
       TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN || 'test_token'
     },
-    // Увеличиваем таймауты для property-based тестов
+    // Увеличиваем таймауты для property-based и интеграционных тестов
     testTimeout: 30000,
     hookTimeout: 30000
   },
