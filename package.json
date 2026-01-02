@@ -12,6 +12,7 @@
     "db:generate": "drizzle-kit generate:pg",
     "db:migrate": "tsx server/db/migrate.ts",
     "db:studio": "drizzle-kit studio",
+    "db:seed:achievements": "tsx scripts/seed-achievements.ts",
     "test": "vitest --run",
     "test:watch": "vitest"
   },
