@@ -5,6 +5,11 @@
  * npx tsx scripts/setup-telegram-webhook.ts
  */
 
+import { config } from 'dotenv'
+
+// Загружаем переменные окружения из .env
+config()
+
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN
 const WEBHOOK_URL = process.env.WEBHOOK_URL || 'https://nudge-telegram-app.onrender.com/api/webhook/telegram'
 

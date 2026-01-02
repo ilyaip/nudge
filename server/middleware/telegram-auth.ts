@@ -6,9 +6,12 @@
 import { createHmac } from 'crypto'
 
 export default defineEventHandler(async (event) => {
-  // Пропускаем health check и статические файлы
+  // Пропускаем health check, миграции, webhook и статические файлы
   const path = event.path
-  if (path === '/api/health' || path === '/api/migrate' || !path.startsWith('/api/')) {
+  if (path === '/api/health' || 
+      path === '/api/migrate' || 
+      path === '/api/webhook/telegram' ||
+      !path.startsWith('/api/')) {
     return
   }
 
