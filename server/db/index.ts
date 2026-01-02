@@ -8,8 +8,10 @@ if (!connectionString) {
   throw new Error('DATABASE_URL environment variable is not set')
 }
 
-// Create postgres client
-const client = postgres(connectionString)
+// Create postgres client with SSL support for production
+const client = postgres(connectionString, {
+  ssl: connectionString.includes('render.com') ? { rejectUnauthorized: false } : false
+})
 
 // Create drizzle instance
 export const db = drizzle(client, { schema })
