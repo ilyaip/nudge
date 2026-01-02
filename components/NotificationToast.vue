@@ -1,66 +1,96 @@
 <template>
-  <div class="fixed top-4 right-4 z-50 space-y-3 max-w-md">
-    <TransitionGroup name="toast">
-      <div
-        v-for="notification in notifications"
-        :key="notification.id"
-        :class="toastClass(notification.type)"
-        class="flex items-start gap-3 p-4 rounded-lg shadow-lg border backdrop-blur-sm"
-      >
-        <!-- Иконка -->
-        <div class="flex-shrink-0 text-2xl">
-          {{ getIcon(notification.type) }}
-        </div>
-
-        <!-- Контент -->
-        <div class="flex-1 min-w-0">
-          <h4 v-if="notification.title" :class="titleClass(notification.type)">
-            {{ notification.title }}
-          </h4>
-          <p :class="messageClass(notification.type)">
-            {{ notification.message }}
-          </p>
-        </div>
-
-        <!-- Кнопка закрытия -->
-        <button
-          v-if="notification.dismissible"
-          @click="removeNotification(notification.id)"
-          :class="closeButtonClass(notification.type)"
-          aria-label="Закрыть"
+  <Teleport to="body">
+    <div class="fixed top-4 left-4 right-4 z-[100] flex flex-col items-center gap-3">
+      <TransitionGroup name="toast">
+        <div
+          v-for="notification in notifications"
+          :key="notification.id"
+          :class="toastClass(notification.type)"
+          class="w-full max-w-sm flex items-center gap-3 px-4 py-3 rounded-2xl shadow-lg backdrop-blur-sm"
         >
-          ✕
-        </button>
-      </div>
-    </TransitionGroup>
-  </div>
+          <!-- Иконка -->
+          <div 
+            :class="iconContainerClass(notification.type)"
+            class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+          >
+            <span class="text-lg">{{ getIcon(notification.type, notification.title) }}</span>
+          </div>
+
+          <!-- Контент -->
+          <div class="flex-1 min-w-0">
+            <p :class="messageClass(notification.type)" class="font-semibold text-sm leading-tight">
+              {{ notification.message }}
+            </p>
+          </div>
+
+          <!-- Кнопка закрытия -->
+          <button
+            v-if="notification.dismissible"
+            @click="removeNotification(notification.id)"
+            :class="closeButtonClass(notification.type)"
+            class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-all"
+            aria-label="Закрыть"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      </TransitionGroup>
+    </div>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
 import { useNotifications } from '~/composables/useNotifications'
-
-/**
- * Компонент для отображения toast-уведомлений
- * Показывает уведомления в правом верхнем углу экрана
- */
 
 const { notifications, removeNotification } = useNotifications()
 
 /**
  * Получить иконку для типа уведомления
  */
-const getIcon = (type: string): string => {
+const getIcon = (type: string, title?: string): string => {
+  // Если в title есть эмодзи, используем его
+  if (title) {
+    const emojiMatch = title.match(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|[\u{1F600}-\u{1F64F}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2300}-\u{23FF}]|[\u{2B50}]|[\u{2728}]|[\u{2705}]|[\u{274C}]|[\u{26A0}]|[\u{2139}]|[\u{1F4E6}]|[\u{2699}]/gu)
+    if (emojiMatch) {
+      return emojiMatch[0]
+    }
+  }
+  
   switch (type) {
     case 'success':
-      return '✅'
+      return '✓'
     case 'error':
-      return '❌'
+      return '!'
     case 'warning':
-      return '⚠️'
+      return '⚠'
     case 'info':
-      return 'ℹ️'
+      return 'i'
+    case 'xp':
+      return '✨'
     default:
-      return '📢'
+      return '•'
+  }
+}
+
+/**
+ * Классы для контейнера иконки
+ */
+const iconContainerClass = (type: string): string => {
+  switch (type) {
+    case 'success':
+      return 'bg-white/20'
+    case 'error':
+      return 'bg-white/20'
+    case 'warning':
+      return 'bg-yellow-500/20'
+    case 'info':
+      return 'bg-primary/20'
+    case 'xp':
+      return 'bg-white/20'
+    default:
+      return 'bg-gray-500/20'
   }
 }
 
@@ -68,39 +98,19 @@ const getIcon = (type: string): string => {
  * Классы для toast в зависимости от типа
  */
 const toastClass = (type: string): string => {
-  const baseClasses = 'transition-all duration-300'
-  
   switch (type) {
     case 'success':
-      return `${baseClasses} bg-green-50/95 border-green-200`
+      return 'bg-green-500 text-white'
     case 'error':
-      return `${baseClasses} bg-red-50/95 border-red-200`
+      return 'bg-red-500 text-white'
     case 'warning':
-      return `${baseClasses} bg-yellow-50/95 border-yellow-200`
+      return 'bg-yellow-500 text-white'
     case 'info':
-      return `${baseClasses} bg-blue-50/95 border-blue-200`
+      return 'bg-primary text-white'
+    case 'xp':
+      return 'gradient-purple-bright text-white'
     default:
-      return `${baseClasses} bg-gray-50/95 border-gray-200`
-  }
-}
-
-/**
- * Классы для заголовка
- */
-const titleClass = (type: string): string => {
-  const baseClasses = 'font-semibold text-sm mb-1'
-  
-  switch (type) {
-    case 'success':
-      return `${baseClasses} text-green-900`
-    case 'error':
-      return `${baseClasses} text-red-900`
-    case 'warning':
-      return `${baseClasses} text-yellow-900`
-    case 'info':
-      return `${baseClasses} text-blue-900`
-    default:
-      return `${baseClasses} text-gray-900`
+      return 'bg-gray-800 text-white'
   }
 }
 
@@ -108,39 +118,26 @@ const titleClass = (type: string): string => {
  * Классы для сообщения
  */
 const messageClass = (type: string): string => {
-  const baseClasses = 'text-sm'
-  
-  switch (type) {
-    case 'success':
-      return `${baseClasses} text-green-800`
-    case 'error':
-      return `${baseClasses} text-red-800`
-    case 'warning':
-      return `${baseClasses} text-yellow-800`
-    case 'info':
-      return `${baseClasses} text-blue-800`
-    default:
-      return `${baseClasses} text-gray-800`
-  }
+  return 'text-white'
 }
 
 /**
  * Классы для кнопки закрытия
  */
 const closeButtonClass = (type: string): string => {
-  const baseClasses = 'flex-shrink-0 text-lg hover:opacity-70 transition-opacity'
-  
   switch (type) {
     case 'success':
-      return `${baseClasses} text-green-600`
+      return 'bg-white/10 hover:bg-white/20 text-white'
     case 'error':
-      return `${baseClasses} text-red-600`
+      return 'bg-white/10 hover:bg-white/20 text-white'
     case 'warning':
-      return `${baseClasses} text-yellow-600`
+      return 'bg-white/10 hover:bg-white/20 text-white'
     case 'info':
-      return `${baseClasses} text-blue-600`
+      return 'bg-white/10 hover:bg-white/20 text-white'
+    case 'xp':
+      return 'bg-white/10 hover:bg-white/20 text-white'
     default:
-      return `${baseClasses} text-gray-600`
+      return 'bg-white/10 hover:bg-white/20 text-white'
   }
 }
 </script>
@@ -154,12 +151,12 @@ const closeButtonClass = (type: string): string => {
 
 .toast-enter-from {
   opacity: 0;
-  transform: translateX(100%);
+  transform: translateY(-20px) scale(0.95);
 }
 
 .toast-leave-to {
   opacity: 0;
-  transform: translateX(100%) scale(0.9);
+  transform: translateY(-10px) scale(0.95);
 }
 
 .toast-move {

@@ -1,0 +1,18 @@
+/* Global Vue Transitions */
+
+/* Fade transition */
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
+}
+
+/* Scale transition */
+.scale-enter-active, .scale-leave-active {
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+.scale-enter-from, .scale-leave-to {
+  transform: scale(0.95);
+  opacity: 0;
+}

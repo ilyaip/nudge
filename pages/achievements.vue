@@ -1,9 +1,9 @@
 <template>
-  <div class="min-h-screen bg-gray-50 p-4 pb-20">
+  <div class="min-h-screen bg-background p-4 pb-24">
     <!-- Заголовок -->
     <header class="mb-6">
-      <h1 class="text-3xl font-bold text-gray-900">Достижения</h1>
-      <p class="text-gray-600 mt-1">Ваши награды и прогресс</p>
+      <h1 class="text-3xl font-bold text-text">Достижения</h1>
+      <p class="text-textSecondary mt-1">Ваши награды и прогресс</p>
     </header>
 
     <!-- Состояние загрузки -->
@@ -27,19 +27,19 @@
     <!-- Основной контент -->
     <div v-else class="space-y-6">
       <!-- Статистика достижений -->
-      <section class="bg-white rounded-lg shadow-md p-6">
+      <section class="bg-backgroundSecondary rounded-3xl shadow-sm p-6">
         <div class="flex items-center justify-between">
           <div>
-            <h2 class="text-xl font-semibold text-gray-900">Прогресс</h2>
-            <p class="text-sm text-gray-600 mt-1">
+            <h2 class="text-xl font-bold text-text">Прогресс</h2>
+            <p class="text-sm text-textSecondary mt-1">
               Разблокировано {{ achievementCount.unlocked }} из {{ achievementCount.total }} достижений
             </p>
           </div>
           <div class="text-right">
-            <div class="text-3xl font-bold text-purple-600">
+            <div class="text-3xl font-bold text-primary">
               {{ achievementCompletionPercentage }}%
             </div>
-            <p class="text-xs text-gray-500 mt-1">завершено</p>
+            <p class="text-xs text-textSecondary mt-1">завершено</p>
           </div>
         </div>
 
@@ -47,7 +47,7 @@
         <div class="mt-4">
           <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
             <div 
-              class="bg-gradient-to-r from-purple-500 to-purple-600 h-3 rounded-full transition-all duration-500"
+              class="bg-gradient-to-r from-primary to-primaryLight h-3 rounded-full transition-all duration-500"
               :style="{ width: `${achievementCompletionPercentage}%` }"
             ></div>
           </div>
@@ -56,38 +56,25 @@
 
       <!-- Разблокированные достижения -->
       <section v-if="unlockedAchievements.length > 0">
-        <h2 class="text-xl font-semibold text-gray-900 mb-4">
+        <h2 class="text-xl font-bold text-text mb-4">
           Разблокированные ({{ unlockedAchievements.length }})
         </h2>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div 
             v-for="achievement in unlockedAchievements" 
             :key="achievement.id"
-            class="bg-gradient-to-br from-yellow-50 to-yellow-100 border-2 border-yellow-300 rounded-lg p-5 shadow-sm hover:shadow-md transition-shadow"
+            class="bg-gradient-to-br from-yellow-400 to-orange-500 rounded-3xl p-6 text-white hover:shadow-lg transition-shadow"
           >
             <div class="flex items-start gap-4">
-              <!-- Иконка -->
-              <div class="text-5xl flex-shrink-0">{{ achievement.icon }}</div>
-              
-              <!-- Информация -->
-              <div class="flex-1 min-w-0">
-                <h3 class="font-bold text-lg text-yellow-900">{{ achievement.name }}</h3>
-                <p class="text-sm text-yellow-800 mt-1">{{ achievement.description }}</p>
-                
-                <!-- Награда и дата -->
-                <div class="flex items-center gap-3 mt-3">
-                  <span class="inline-flex items-center gap-1 bg-yellow-200 text-yellow-900 text-xs font-semibold px-2 py-1 rounded">
-                    <span>💎</span>
-                    <span>+{{ achievement.xpReward }} XP</span>
-                  </span>
-                  <span class="text-xs text-yellow-700">
-                    {{ formatDate(achievement.unlockedAt) }}
-                  </span>
+              <div class="text-5xl">{{ achievement.icon }}</div>
+              <div class="flex-1">
+                <h3 class="text-xl font-bold">{{ achievement.name }}</h3>
+                <p class="text-white/90 text-sm mt-1">{{ achievement.description }}</p>
+                <div class="mt-3 flex items-center gap-2 flex-wrap">
+                  <span class="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-semibold">+{{ achievement.xpReward }} XP</span>
+                  <span class="text-sm text-white/80">{{ formatDate(achievement.unlockedAt) }}</span>
                 </div>
               </div>
-
-              <!-- Галочка -->
-              <div class="text-2xl text-yellow-600 flex-shrink-0">✓</div>
             </div>
           </div>
         </div>
@@ -95,40 +82,40 @@
 
       <!-- Заблокированные достижения -->
       <section v-if="lockedAchievements.length > 0">
-        <h2 class="text-xl font-semibold text-gray-900 mb-4">
+        <h2 class="text-xl font-bold text-text mb-4">
           Заблокированные ({{ lockedAchievements.length }})
         </h2>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div 
             v-for="achievement in lockedAchievements" 
             :key="achievement.id"
-            class="bg-white border-2 border-gray-200 rounded-lg p-5 shadow-sm hover:shadow-md transition-shadow opacity-75"
+            class="bg-backgroundSecondary border-2 border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow grayscale opacity-60"
           >
             <div class="flex items-start gap-4">
               <!-- Иконка (затемненная) -->
-              <div class="text-5xl flex-shrink-0 grayscale opacity-50">{{ achievement.icon }}</div>
+              <div class="text-5xl flex-shrink-0">{{ achievement.icon }}</div>
               
               <!-- Информация -->
               <div class="flex-1 min-w-0">
-                <h3 class="font-bold text-lg text-gray-700">{{ achievement.name }}</h3>
-                <p class="text-sm text-gray-600 mt-1">{{ achievement.description }}</p>
+                <h3 class="font-bold text-lg text-text">{{ achievement.name }}</h3>
+                <p class="text-sm text-textSecondary mt-1">{{ achievement.description }}</p>
                 
                 <!-- Награда и прогресс -->
                 <div class="mt-3 space-y-2">
-                  <span class="inline-flex items-center gap-1 bg-gray-100 text-gray-700 text-xs font-semibold px-2 py-1 rounded">
+                  <span class="inline-flex items-center gap-1 bg-gray-100 text-text text-xs font-semibold px-2 py-1 rounded-lg">
                     <span>💎</span>
                     <span>+{{ achievement.xpReward }} XP</span>
                   </span>
                   
                   <!-- Прогресс к достижению -->
-                  <div v-if="achievement.progress !== undefined" class="mt-2">
-                    <div class="flex justify-between text-xs text-gray-600 mb-1">
+                  <div v-if="achievement.progress !== undefined" class="mt-3">
+                    <div class="flex justify-between text-xs mb-1 text-textSecondary">
                       <span>Прогресс</span>
-                      <span>{{ achievement.progress }}%</span>
+                      <span class="font-semibold">{{ achievement.progress }}%</span>
                     </div>
-                    <div class="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                    <div class="w-full bg-gray-200 rounded-full h-2">
                       <div 
-                        class="bg-gradient-to-r from-blue-400 to-blue-500 h-2 rounded-full transition-all duration-500"
+                        class="bg-gradient-to-r from-primary to-primaryLight h-2 rounded-full transition-all duration-500"
                         :style="{ width: `${achievement.progress}%` }"
                       ></div>
                     </div>
@@ -137,17 +124,17 @@
               </div>
 
               <!-- Замок -->
-              <div class="text-2xl text-gray-400 flex-shrink-0">🔒</div>
+              <div class="text-2xl text-textSecondary flex-shrink-0">🔒</div>
             </div>
           </div>
         </div>
       </section>
 
       <!-- Пустое состояние -->
-      <section v-if="achievements.length === 0" class="bg-white rounded-lg shadow-md p-12 text-center">
+      <section v-if="achievements.length === 0" class="bg-backgroundSecondary rounded-3xl shadow-sm p-12 text-center">
         <div class="text-6xl mb-4">🎯</div>
-        <h3 class="text-xl font-semibold text-gray-900 mb-2">Нет достижений</h3>
-        <p class="text-gray-600">Достижения появятся после настройки системы</p>
+        <h3 class="text-xl font-bold text-text mb-2">Нет достижений</h3>
+        <p class="text-textSecondary">Достижения появятся после настройки системы</p>
       </section>
     </div>
 
@@ -157,7 +144,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useGamification } from '~/composables/useGamification'
 
 // Composable для геймификации

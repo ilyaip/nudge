@@ -1,7 +1,8 @@
-import { db } from '../../../db'
+import { db, schema } from '../../../db'
 import { reminders, contacts } from '../../../db/schema'
 import { eq, and } from 'drizzle-orm'
 import { calculateNextReminderDate } from '../../../utils/reminders'
+import { updateStreak, awardXP, checkAchievements } from '../../../utils/gamification'
 
 /**
  * POST /api/reminders/:id/complete
@@ -9,9 +10,6 @@ import { calculateNextReminderDate } from '../../../utils/reminders'
  * 
  * Параметры маршрута:
  * - id: ID напоминания
- * 
- * Body параметры:
- * - userId: ID пользователя (для проверки прав доступа)
  * 
  * Действия:
  * 1. Отметить напоминание как выполненное
@@ -30,25 +28,39 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    // Получить userId из body
-    const body = await readBody(event)
-    const userId = body.userId
+    // Получить Telegram ID из контекста
+    const telegramUser = event.context.telegramUser
+    const telegramId = telegramUser?.id
 
-    if (!userId) {
+    if (!telegramId) {
       throw createError({
-        statusCode: 400,
-        statusMessage: 'Missing userId in request body'
+        statusCode: 401,
+        statusMessage: 'Unauthorized: Telegram user not found'
       })
     }
 
-    // Получить напоминание и проверить, что оно принадлежит пользователю
+    // Найти пользователя по Telegram ID
+    const [user] = await db
+      .select()
+      .from(schema.users)
+      .where(eq(schema.users.telegramId, String(telegramId)))
+      .limit(1)
+
+    if (!user) {
+      throw createError({
+        statusCode: 404,
+        statusMessage: 'Пользователь не найден'
+      })
+    }
+
+    // Получить напоминание и проверить, что оно принадлежит пользователю (используем database user.id)
     const [reminder] = await db
       .select()
       .from(reminders)
       .where(
         and(
           eq(reminders.id, reminderId),
-          eq(reminders.userId, userId)
+          eq(reminders.userId, user.id)
         )
       )
       .limit(1)
@@ -114,6 +126,41 @@ export default defineEventHandler(async (event) => {
       })
       .where(eq(contacts.id, contact.id))
 
+    // Gamification: Update streak, award XP, and check achievements
+    await updateStreak(user.id)
+    const userAfterXP = await awardXP(user.id, 'REMINDER_COMPLETED')
+    const newAchievements = await checkAchievements(user.id)
+
+    // Get updated user data from database
+    const [updatedUser] = await db
+      .select()
+      .from(schema.users)
+      .where(eq(schema.users.id, user.id))
+      .limit(1)
+
+    // Get achievement details for unlocked achievements
+    const unlockedAchievements = []
+    if (newAchievements.length > 0) {
+      for (const userAchievement of newAchievements) {
+        const [achievement] = await db
+          .select()
+          .from(schema.achievements)
+          .where(eq(schema.achievements.id, userAchievement.achievementId))
+          .limit(1)
+        
+        if (achievement) {
+          unlockedAchievements.push({
+            id: achievement.id,
+            code: achievement.code,
+            name: achievement.name,
+            description: achievement.description,
+            icon: achievement.icon,
+            xpReward: achievement.xpReward
+          })
+        }
+      }
+    }
+
     return {
       success: true,
       message: 'Напоминание успешно выполнено',
@@ -122,7 +169,11 @@ export default defineEventHandler(async (event) => {
         ...contact,
         lastContactDate: now,
         nextReminderDate: nextReminderDate
-      }
+      },
+      xpEarned: 20,
+      newLevel: updatedUser?.level || user.level,
+      newStreak: updatedUser?.currentStreak || user.currentStreak,
+      unlockedAchievements
     }
   } catch (error: any) {
     if (error.statusCode) {

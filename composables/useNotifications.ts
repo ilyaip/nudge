@@ -5,7 +5,7 @@ import { ref } from 'vue'
  */
 export interface Notification {
   id: string
-  type: 'success' | 'error' | 'warning' | 'info'
+  type: 'success' | 'error' | 'warning' | 'info' | 'xp'
   title?: string
   message: string
   duration?: number
@@ -33,7 +33,7 @@ export const useNotifications = () => {
    */
   const addNotification = (notification: Omit<Notification, 'id'>): string => {
     const id = `notification-${++notificationIdCounter}`
-    const duration = notification.duration ?? 5000 // По умолчанию 5 секунд
+    const duration = notification.duration ?? 3000 // По умолчанию 3 секунды
     
     const newNotification: Notification = {
       id,
@@ -126,6 +126,21 @@ export const useNotifications = () => {
   }
 
   /**
+   * Показать уведомление о заработанном XP
+   * @param message - Сообщение (например, "+20 XP заработано!")
+   * @param title - Заголовок (опционально)
+   * @param duration - Длительность в мс (опционально)
+   */
+  const showXP = (message: string, title?: string, duration?: number): string => {
+    return addNotification({
+      type: 'xp',
+      title,
+      message,
+      duration
+    })
+  }
+
+  /**
    * Очистить все уведомления
    */
   const clearAll = () => {
@@ -142,6 +157,7 @@ export const useNotifications = () => {
     showError,
     showWarning,
     showInfo,
+    showXP,
     clearAll
   }
 }

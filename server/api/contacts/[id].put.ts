@@ -10,8 +10,8 @@ interface UpdateContactRequest {
   customFrequencyDays?: number
   communicationType?: 'message' | 'call' | 'meeting'
   category?: 'family' | 'friends' | 'colleagues' | 'business'
-  lastContactDate?: Date | null
-  nextReminderDate?: Date | null
+  lastContactDate?: string | Date | null
+  nextReminderDate?: string | Date | null
 }
 
 /**
@@ -127,8 +127,18 @@ export default defineEventHandler(async (event) => {
     if (body.customFrequencyDays !== undefined) updateData.customFrequencyDays = body.customFrequencyDays
     if (body.communicationType !== undefined) updateData.communicationType = body.communicationType
     if (body.category !== undefined) updateData.category = body.category
-    if (body.lastContactDate !== undefined) updateData.lastContactDate = body.lastContactDate
-    if (body.nextReminderDate !== undefined) updateData.nextReminderDate = body.nextReminderDate
+    
+    // Обработка дат - конвертируем строки в Date объекты
+    if (body.lastContactDate !== undefined) {
+      updateData.lastContactDate = body.lastContactDate 
+        ? new Date(body.lastContactDate) 
+        : null
+    }
+    if (body.nextReminderDate !== undefined) {
+      updateData.nextReminderDate = body.nextReminderDate 
+        ? new Date(body.nextReminderDate) 
+        : null
+    }
 
     // Обновить контакт
     const updatedContacts = await db

@@ -88,9 +88,37 @@ export const useReminders = () => {
       isLoading.value = true
       error.value = null
 
-      await $fetch(`/api/reminders/${reminderId}/complete`, {
+      const response = await $fetch<{
+        success: boolean
+        message: string
+        xpEarned?: number
+        newLevel?: number
+        newStreak?: number
+        unlockedAchievements?: Array<{
+          id: number
+          code: string
+          name: string
+          description: string
+          icon: string
+          xpReward: number
+        }>
+      }>(`/api/reminders/${reminderId}/complete`, {
         method: 'POST'
       })
+
+      // Получить composables для уведомлений и модалки достижений
+      const { showSuccess } = useNotifications()
+      const { showAchievements } = useAchievementModal()
+
+      // Показать уведомление с заработанным XP
+      if (response.xpEarned) {
+        showSuccess(`+${response.xpEarned} XP заработано!`, '🎉 Отлично!')
+      }
+
+      // Показать модальное окно для разблокированных достижений
+      if (response.unlockedAchievements && response.unlockedAchievements.length > 0) {
+        showAchievements(response.unlockedAchievements)
+      }
 
       // Перезагрузить напоминания для получения обновленных данных с сервера
       await fetchReminders()

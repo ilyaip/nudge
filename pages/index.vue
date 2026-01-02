@@ -1,9 +1,32 @@
 <template>
-  <div class="min-h-screen bg-gray-50 p-4 pb-20">
-    <!-- Заголовок -->
-    <header class="mb-6">
-      <h1 class="text-3xl font-bold text-gray-900">Dashboard</h1>
-      <p class="text-gray-600 mt-1">Добро пожаловать в Nudge!</p>
+  <div class="min-h-screen bg-background pb-28 overflow-x-hidden">
+    <!-- Заголовок с градиентом -->
+    <header class="gradient-purple-header p-4 pb-6 rounded-b-[32px] mb-6 shadow-lg">
+      <div class="flex items-center justify-between mb-6">
+        <!-- Аватар -->
+        <NuxtLink to="/profile" class="block">
+          <div class="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm overflow-hidden flex items-center justify-center">
+            <img 
+              v-if="avatarUrl" 
+              :src="avatarUrl" 
+              alt="Аватар" 
+              class="w-full h-full object-cover"
+            />
+            <span v-else class="text-white text-lg font-bold">{{ userInitials }}</span>
+          </div>
+        </NuxtLink>
+        
+        <!-- Уведомления -->
+        <button class="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+          </svg>
+        </button>
+      </div>
+      
+      <p class="text-white/70 text-sm mb-1 font-medium">Ваш прогресс</p>
+      <p class="text-white text-4xl font-bold mb-1">{{ totalXP }} XP</p>
+      <p class="text-white/80 text-sm font-medium">Уровень {{ level }}</p>
     </header>
 
     <!-- Состояние загрузки -->
@@ -12,7 +35,7 @@
       type="stats" 
       :count="1" 
       show-header 
-      class="space-y-6"
+      class="space-y-4 px-4"
     />
 
     <!-- Ошибка -->
@@ -23,158 +46,189 @@
       type="error"
       retryable
       :on-retry="loadData"
+      class="px-4"
     />
 
     <!-- Основной контент -->
-    <div v-else class="space-y-6">
+    <div v-else class="space-y-4 px-4">
+      <!-- Быстрые действия -->
+      <section class="bg-backgroundSecondary rounded-3xl shadow-sm p-4">
+        <div class="grid grid-cols-4 gap-2">
+          <NuxtLink to="/contacts?add=true" class="flex flex-col items-center gap-2 p-2 rounded-2xl hover:bg-gray-50 transition-colors">
+            <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+              <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+              </svg>
+            </div>
+            <span class="text-xs font-medium text-text text-center">Добавить</span>
+          </NuxtLink>
+          
+          <NuxtLink to="/contacts" class="flex flex-col items-center gap-2 p-2 rounded-2xl hover:bg-gray-50 transition-colors">
+            <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+              <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </div>
+            <span class="text-xs font-medium text-text text-center">Контакты</span>
+          </NuxtLink>
+          
+          <NuxtLink to="/achievements" class="flex flex-col items-center gap-2 p-2 rounded-2xl hover:bg-gray-50 transition-colors">
+            <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+              <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+              </svg>
+            </div>
+            <span class="text-xs font-medium text-text text-center">Награды</span>
+          </NuxtLink>
+          
+          <NuxtLink to="/profile" class="flex flex-col items-center gap-2 p-2 rounded-2xl hover:bg-gray-50 transition-colors">
+            <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+              <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            </div>
+            <span class="text-xs font-medium text-text text-center">Профиль</span>
+          </NuxtLink>
+        </div>
+      </section>
+
       <!-- Статистика геймификации -->
-      <section class="bg-white rounded-lg shadow-md p-6">
-        <h2 class="text-xl font-semibold text-gray-900 mb-4">Ваш прогресс</h2>
+      <section>
+        <h2 class="text-lg font-bold text-text mb-3">Статистика</h2>
         
-        <div class="grid grid-cols-2 gap-4 mb-6">
-          <!-- Текущий стрик -->
-          <div class="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-4">
-            <div class="flex items-center justify-between">
-              <div>
-                <p class="text-sm text-orange-600 font-medium">Текущий стрик</p>
-                <p class="text-3xl font-bold text-orange-700">{{ currentStreak }}</p>
-                <p class="text-xs text-orange-600 mt-1">дней подряд</p>
+        <div class="grid grid-cols-2 gap-3">
+          <!-- Streak -->
+          <div class="gradient-purple-dark rounded-2xl p-4 text-white relative overflow-hidden">
+            <div class="flex items-start justify-between">
+              <div class="flex-1 min-w-0 pr-2">
+                <p class="text-white/70 text-xs mb-1">Стрик</p>
+                <p class="text-3xl font-bold">{{ currentStreak }}</p>
+                <p class="text-white/70 text-xs mt-1">дней подряд</p>
               </div>
-              <div class="text-4xl">🔥</div>
+              <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5 text-orange-400" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 23c-3.866 0-7-3.134-7-7 0-2.5 1.5-4.5 3-6.5s3-4.5 3-7.5c0 3 1.5 5.5 3 7.5s3 4 3 6.5c0 3.866-3.134 7-7 7z"/>
+                </svg>
+              </div>
             </div>
           </div>
 
-          <!-- Уровень -->
-          <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4">
-            <div class="flex items-center justify-between">
-              <div>
-                <p class="text-sm text-purple-600 font-medium">Уровень</p>
-                <p class="text-3xl font-bold text-purple-700">{{ level }}</p>
-                <p class="text-xs text-purple-600 mt-1">{{ totalXP }} XP</p>
+          <!-- Level -->
+          <div class="gradient-purple-bright rounded-2xl p-4 text-white relative overflow-hidden">
+            <div class="flex items-start justify-between">
+              <div class="flex-1 min-w-0 pr-2">
+                <p class="text-white/80 text-xs mb-1">Уровень</p>
+                <p class="text-3xl font-bold">{{ level }}</p>
+                <p class="text-white/80 text-xs mt-1">{{ totalXP }} XP</p>
               </div>
-              <div class="text-4xl">⭐</div>
+              <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5 text-yellow-300" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+              </div>
             </div>
-          </div>
-        </div>
-
-        <!-- Прогресс-бар до следующего уровня -->
-        <div class="mb-2">
-          <div class="flex justify-between text-sm text-gray-600 mb-1">
-            <span>Прогресс до уровня {{ level + 1 }}</span>
-            <span>{{ xpProgress }} / {{ xpForNextLevel }} XP</span>
-          </div>
-          <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-            <div 
-              class="bg-gradient-to-r from-purple-500 to-purple-600 h-3 rounded-full transition-all duration-500"
-              :style="{ width: `${getLevelProgress}%` }"
-            ></div>
-          </div>
-          <p class="text-xs text-gray-500 mt-1">{{ getLevelProgress }}% завершено</p>
-        </div>
-
-        <!-- Лучший стрик -->
-        <div class="mt-4 pt-4 border-t border-gray-200">
-          <div class="flex items-center justify-between">
-            <span class="text-sm text-gray-600">Лучший стрик:</span>
-            <span class="text-lg font-semibold text-gray-900">{{ longestStreak }} дней 🏆</span>
           </div>
         </div>
       </section>
 
-      <!-- Виджет сегодняшних напоминаний -->
-      <section class="bg-white rounded-lg shadow-md p-6">
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-xl font-semibold text-gray-900">Сегодняшние напоминания</h2>
-          <span class="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full">
+      <!-- Сегодняшние напоминания -->
+      <section>
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-lg font-bold text-text">Напоминания</h2>
+          <span class="bg-primary/10 text-primary text-sm font-semibold px-3 py-1 rounded-full">
             {{ reminderCount }}
           </span>
         </div>
 
-        <!-- Список напоминаний -->
-        <div v-if="reminderCount === 0" class="text-center py-8">
-          <div class="text-6xl mb-3">✅</div>
-          <p class="text-gray-600">Все напоминания выполнены!</p>
-          <p class="text-sm text-gray-500 mt-1">Отличная работа!</p>
-        </div>
-
-        <div v-else class="space-y-3">
-          <div 
-            v-for="reminder in todayReminders" 
-            :key="reminder.id"
-            class="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors"
-          >
-            <div class="flex items-start justify-between">
-              <div class="flex-1">
-                <h3 class="font-semibold text-gray-900">{{ reminder.contact?.name || 'Контакт' }}</h3>
-                <div class="flex items-center gap-2 mt-1">
-                  <span class="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
-                    {{ getCategoryLabel(reminder.contact?.category) }}
-                  </span>
-                  <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
-                    {{ getTypeLabel(reminder.contact?.communicationType) }}
-                  </span>
-                </div>
-                <p v-if="reminder.contact?.username" class="text-sm text-gray-500 mt-1">
-                  @{{ reminder.contact.username }}
-                </p>
-              </div>
-              
-              <button
-                @click="handleCompleteReminder(reminder.id)"
-                :disabled="isCompletingReminder"
-                class="ml-4 bg-green-500 hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
-              >
-                <LoadingSpinner v-if="isCompletingReminder" size="small" color="white" />
-                <span v-else>✓</span>
-                <span>{{ isCompletingReminder ? 'Сохранение...' : 'Готово' }}</span>
-              </button>
+        <div class="bg-backgroundSecondary rounded-2xl shadow-sm p-4">
+          <div v-if="reminderCount === 0" class="text-center py-6">
+            <div class="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-3">
+              <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
             </div>
+            <p class="text-text font-semibold">Все выполнено!</p>
+            <p class="text-sm text-textSecondary mt-1">Отличная работа</p>
           </div>
+
+          <TransitionGroup v-else name="fade" tag="div" class="space-y-3">
+            <div 
+              v-for="reminder in todayReminders" 
+              :key="reminder.id"
+              class="bg-white border border-gray-100 rounded-xl p-3 hover:shadow-md transition-all"
+            >
+              <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-full gradient-purple-bright flex items-center justify-center text-xl flex-shrink-0">
+                  {{ getCategoryIcon(reminder.contact?.category) }}
+                </div>
+
+                <div class="flex-1 min-w-0">
+                  <h3 class="text-sm font-bold text-text truncate">{{ reminder.contact?.name || 'Контакт' }}</h3>
+                  <p class="text-xs text-textSecondary">{{ getCategoryLabel(reminder.contact?.category) }}</p>
+                </div>
+
+                <button
+                  v-ripple
+                  @click="handleCompleteReminder(reminder.id)"
+                  :disabled="isCompletingReminder"
+                  class="w-10 h-10 rounded-xl bg-primary hover:bg-primaryLight disabled:bg-gray-300 text-white flex items-center justify-center transition-all flex-shrink-0"
+                >
+                  <LoadingSpinner v-if="isCompletingReminder" size="small" color="white" />
+                  <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </TransitionGroup>
         </div>
       </section>
 
       <!-- График активности -->
-      <section class="bg-white rounded-lg shadow-md p-6">
+      <section class="bg-backgroundSecondary rounded-2xl shadow-sm p-4">
         <ActivityChart />
       </section>
 
-      <!-- Достижения (краткий обзор) -->
-      <section class="bg-white rounded-lg shadow-md p-6">
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-xl font-semibold text-gray-900">Достижения</h2>
-          <span class="text-sm text-gray-600">
-            {{ achievementCount.unlocked }} / {{ achievementCount.total }}
+      <!-- Достижения -->
+      <section class="bg-backgroundSecondary rounded-2xl shadow-sm p-4">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-lg font-bold text-text">Достижения</h2>
+          <span class="text-sm text-textSecondary">
+            {{ achievementCount.unlocked }}/{{ achievementCount.total }}
           </span>
         </div>
 
-        <div v-if="unlockedAchievements.length === 0" class="text-center py-8">
-          <div class="text-5xl mb-3">🎯</div>
-          <p class="text-gray-600">Пока нет достижений</p>
-          <p class="text-sm text-gray-500 mt-1">Выполняйте напоминания, чтобы получить первое!</p>
+        <div v-if="unlockedAchievements.length === 0" class="text-center py-6">
+          <div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
+            <svg class="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+            </svg>
+          </div>
+          <p class="text-text font-semibold">Пока нет достижений</p>
+          <p class="text-sm text-textSecondary mt-1">Выполняйте напоминания!</p>
         </div>
 
-        <div v-else class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <div v-else class="grid grid-cols-4 gap-2">
           <div 
-            v-for="achievement in unlockedAchievements.slice(0, 6)" 
+            v-for="achievement in unlockedAchievements.slice(0, 4)" 
             :key="achievement.id"
-            class="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg p-3 text-center"
+            class="bg-yellow-50 rounded-xl p-3 text-center"
           >
-            <div class="text-3xl mb-1">{{ achievement.icon }}</div>
-            <p class="text-xs font-medium text-yellow-800">{{ achievement.name }}</p>
+            <div class="text-2xl mb-1">{{ achievement.icon }}</div>
+            <p class="text-[10px] font-semibold text-yellow-800 leading-tight truncate">{{ achievement.name }}</p>
           </div>
         </div>
 
         <NuxtLink 
           v-if="achievementCount.total > 0"
           to="/achievements"
-          class="mt-4 w-full block text-center text-blue-600 hover:text-blue-800 font-medium text-sm"
+          class="mt-3 w-full block text-center text-primary font-semibold text-sm py-2 rounded-xl transition-colors hover:bg-primary/5"
         >
-          Посмотреть все достижения →
+          Все достижения →
         </NuxtLink>
       </section>
     </div>
 
-    <!-- Нижняя навигация -->
     <BottomNav />
   </div>
 </template>
@@ -187,7 +241,8 @@ import { useActivity } from '~/composables/useActivity'
 import { useNotifications } from '~/composables/useNotifications'
 import { useAuthStore } from '~/stores/auth'
 
-// Composables
+const authStore = useAuthStore()
+
 const {
   todayReminders,
   reminderCount,
@@ -198,12 +253,8 @@ const {
 
 const {
   currentStreak,
-  longestStreak,
   totalXP,
   level,
-  xpForNextLevel,
-  xpProgress,
-  getLevelProgress,
   unlockedAchievements,
   achievementCount,
   fetchAll: fetchGamification,
@@ -217,85 +268,81 @@ const {
 
 const { showSuccess, showError } = useNotifications()
 
-// Локальное состояние
 const isLoading = ref(false)
 const isCompletingReminder = ref(false)
+const avatarUrl = ref<string | null>(null)
 const error = computed(() => remindersError.value || gamificationError.value || activityError.value)
 
-/**
- * Загрузить все данные для dashboard
- */
+const userName = computed(() => {
+  return authStore.user?.firstName 
+    ? `${authStore.user.firstName}${authStore.user.lastName ? ' ' + authStore.user.lastName : ''}`
+    : 'Пользователь'
+})
+
+const userInitials = computed(() => {
+  const name = userName.value
+  if (!name || name === 'Пользователь') return '👤'
+  const parts = name.split(' ')
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[1][0]).toUpperCase()
+  }
+  return name.substring(0, 2).toUpperCase()
+})
+
 const loadData = async () => {
   try {
     isLoading.value = true
     
-    // Ждем загрузки Telegram SDK (максимум 5 секунд)
-    console.log('[Dashboard] Waiting for Telegram SDK...')
+    // Загружаем сохраненный аватар
+    const savedAvatar = localStorage.getItem('userAvatar')
+    if (savedAvatar) {
+      avatarUrl.value = savedAvatar
+    }
+    
+    // Ждем Telegram SDK
     let attempts = 0
     while (!window.Telegram?.WebApp?.initData && attempts < 50) {
       await new Promise(resolve => setTimeout(resolve, 100))
       attempts++
     }
     
-    if (window.Telegram?.WebApp?.initData) {
-      console.log('[Dashboard] Telegram SDK ready')
-    } else {
-      console.warn('[Dashboard] Telegram SDK not ready after 5 seconds')
+    // Пробуем получить фото из Telegram
+    if (!avatarUrl.value && window.Telegram?.WebApp?.initDataUnsafe?.user?.photo_url) {
+      avatarUrl.value = window.Telegram.WebApp.initDataUnsafe.user.photo_url
     }
     
-    // Авторизуемся (создаем пользователя если нужно)
-    // initData автоматически добавляется plugin'ом
+    // Авторизуемся
     const authResponse = await $fetch<{ success: boolean; user: any }>('/api/auth', { method: 'POST' })
     
-    console.log('[Dashboard] Auth response:', authResponse)
-    
-    // Сохраняем пользователя в auth store
     if (authResponse.success && authResponse.user) {
-      const authStore = useAuthStore()
       authStore.setUser(authResponse.user)
-      console.log('[Dashboard] User saved to store:', authResponse.user)
     }
     
-    // Затем загружаем данные
     await Promise.all([
       fetchReminders(),
       fetchGamification(),
-      fetchActivity('week') // Загружаем данные активности за неделю по умолчанию
+      fetchActivity('week')
     ])
   } catch (err: any) {
-    console.error('[Dashboard] Ошибка загрузки данных:', err)
-    console.error('[Dashboard] Error details:', err.data || err.message)
+    console.error('[Dashboard] Ошибка:', err)
   } finally {
     isLoading.value = false
   }
 }
 
-/**
- * Обработать завершение напоминания
- */
 const handleCompleteReminder = async (reminderId: number) => {
   try {
     isCompletingReminder.value = true
     await completeReminder(reminderId)
-    // Обновить статистику после завершения
     await fetchGamification()
-    
-    // Показать уведомление об успехе
-    showSuccess('Напоминание отмечено как выполненное', 'Отлично!')
+    showSuccess('Выполнено!', '✅')
   } catch (err: any) {
-    console.error('Ошибка завершения напоминания:', err)
-    showError(
-      err.data?.statusMessage || err.message || 'Не удалось завершить напоминание',
-      'Ошибка'
-    )
+    showError(err.data?.statusMessage || 'Ошибка', '❌')
   } finally {
     isCompletingReminder.value = false
   }
 }
 
-/**
- * Получить метку категории на русском
- */
 const getCategoryLabel = (category?: string): string => {
   const labels: Record<string, string> = {
     family: 'Семья',
@@ -303,23 +350,43 @@ const getCategoryLabel = (category?: string): string => {
     colleagues: 'Коллеги',
     business: 'Бизнес'
   }
-  return labels[category || ''] || category || 'Другое'
+  return labels[category || ''] || 'Другое'
 }
 
-/**
- * Получить метку типа коммуникации на русском
- */
-const getTypeLabel = (type?: string): string => {
-  const labels: Record<string, string> = {
-    message: 'Сообщение',
-    call: 'Звонок',
-    meeting: 'Встреча'
+const getCategoryIcon = (category?: string): string => {
+  const icons: Record<string, string> = {
+    family: '👨‍👩‍👧',
+    friends: '👥',
+    colleagues: '💼',
+    business: '🤝'
   }
-  return labels[type || ''] || type || 'Контакт'
+  return icons[category || ''] || '👤'
 }
 
-// Загрузить данные при монтировании компонента
 onMounted(() => {
   loadData()
 })
 </script>
+
+<style scoped>
+.fade-move,
+.fade-enter-active,
+.fade-leave-active {
+  transition: all 0.3s ease;
+}
+
+.fade-enter-from {
+  opacity: 0;
+  transform: translateX(-20px);
+}
+
+.fade-leave-to {
+  opacity: 0;
+  transform: translateX(20px);
+}
+
+.fade-leave-active {
+  position: absolute;
+  width: calc(100% - 2rem);
+}
+</style>

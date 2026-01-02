@@ -9,10 +9,10 @@
         <button
           @click="handlePeriodChange('week')"
           :class="[
-            'px-4 py-2 rounded-md text-sm font-medium transition-colors',
+            'px-4 py-2 rounded-md text-sm font-medium transition-all',
             currentPeriod === 'week'
-              ? 'bg-white text-blue-600 shadow-sm'
-              : 'text-gray-600 hover:text-gray-900'
+              ? 'bg-white text-primary shadow-sm'
+              : 'text-gray-600 hover:text-gray-900 hover:scale-105'
           ]"
         >
           Неделя
@@ -20,10 +20,10 @@
         <button
           @click="handlePeriodChange('month')"
           :class="[
-            'px-4 py-2 rounded-md text-sm font-medium transition-colors',
+            'px-4 py-2 rounded-md text-sm font-medium transition-all',
             currentPeriod === 'month'
-              ? 'bg-white text-blue-600 shadow-sm'
-              : 'text-gray-600 hover:text-gray-900'
+              ? 'bg-white text-primary shadow-sm'
+              : 'text-gray-600 hover:text-gray-900 hover:scale-105'
           ]"
         >
           Месяц
@@ -33,7 +33,7 @@
 
     <!-- Состояние загрузки -->
     <div v-if="isLoading" class="flex justify-center items-center py-12">
-      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
     </div>
 
     <!-- Ошибка -->
@@ -41,7 +41,7 @@
       <p class="text-red-800 text-sm">{{ error }}</p>
       <button 
         @click="retry" 
-        class="mt-2 text-red-600 hover:text-red-800 underline text-sm"
+        class="mt-2 text-red-600 hover:text-red-800 hover:scale-105 underline text-sm transition-all"
       >
         Попробовать снова
       </button>
@@ -51,16 +51,16 @@
     <div v-else>
       <!-- Статистика -->
       <div class="grid grid-cols-2 gap-4 mb-6">
-        <div class="bg-blue-50 rounded-lg p-4">
-          <p class="text-sm text-blue-600 font-medium">Всего выполнено</p>
-          <p class="text-2xl font-bold text-blue-700">{{ totalCompleted }}</p>
-          <p class="text-xs text-blue-600 mt-1">напоминаний</p>
+        <div class="bg-purple-50 rounded-lg p-4">
+          <p class="text-sm text-primary font-medium">Всего выполнено</p>
+          <p class="text-2xl font-bold text-primary">{{ totalCompleted }}</p>
+          <p class="text-xs text-primary mt-1">напоминаний</p>
         </div>
         
         <div class="bg-purple-50 rounded-lg p-4">
-          <p class="text-sm text-purple-600 font-medium">Заработано XP</p>
-          <p class="text-2xl font-bold text-purple-700">{{ totalXP }}</p>
-          <p class="text-xs text-purple-600 mt-1">за период</p>
+          <p class="text-sm text-primary font-medium">Заработано XP</p>
+          <p class="text-2xl font-bold text-primary">{{ totalXP }}</p>
+          <p class="text-xs text-primary mt-1">за период</p>
         </div>
       </div>
 
@@ -83,23 +83,26 @@
           <div
             v-for="activity in activities"
             :key="activity.date"
-            class="flex-1 flex flex-col items-center group"
+            @mouseenter="showTooltip(activity)"
+            @mouseleave="hideTooltip"
+            class="flex-1 flex flex-col items-center relative group"
           >
             <!-- Столбец -->
             <div class="relative w-full flex items-end justify-center">
               <div
                 :style="{ height: getBarHeight(activity.completedReminders) }"
                 :class="[
-                  'w-full rounded-t-lg transition-all duration-300 cursor-pointer',
-                  activity.completedReminders > 0
-                    ? 'bg-gradient-to-t from-blue-500 to-blue-400 hover:from-blue-600 hover:to-blue-500'
-                    : 'bg-gray-200'
+                  'w-full rounded-t-lg cursor-pointer activity-bar',
+                  getBarColorClass(activity.completedReminders),
+                  activity.completedReminders > 0 ? 'group-hover:scale-105' : ''
                 ]"
-                :title="`${activity.completedReminders} напоминаний`"
               >
                 <!-- Tooltip при наведении -->
-                <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                  <div class="bg-gray-900 text-white text-xs rounded-lg py-2 px-3 whitespace-nowrap shadow-lg">
+                <div 
+                  v-if="hoveredDay && hoveredDay.date === activity.date" 
+                  class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 z-10"
+                >
+                  <div class="bg-gray-900 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap shadow-lg">
                     <p class="font-semibold">{{ formatDateLabel(activity.date) }}</p>
                     <p class="mt-1">{{ activity.completedReminders }} напоминаний</p>
                     <p>{{ activity.xpEarned }} XP</p>
@@ -117,10 +120,18 @@
       </div>
 
       <!-- Легенда -->
-      <div class="mt-6 flex items-center justify-center gap-4 text-sm text-gray-600">
+      <div class="mt-6 flex flex-wrap items-center justify-center gap-3 text-xs text-gray-600">
         <div class="flex items-center gap-2">
-          <div class="w-4 h-4 rounded bg-gradient-to-t from-blue-500 to-blue-400"></div>
-          <span>Выполнено</span>
+          <div class="w-4 h-4 rounded bg-gradient-to-t from-primaryDark to-primary"></div>
+          <span>Высокая (>5)</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="w-4 h-4 rounded bg-gradient-to-t from-primary to-primaryLight"></div>
+          <span>Средняя (2-5)</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="w-4 h-4 rounded bg-gradient-to-t from-primaryLight to-[#A78BFA]"></div>
+          <span>Низкая (1)</span>
         </div>
         <div class="flex items-center gap-2">
           <div class="w-4 h-4 rounded bg-gray-200"></div>
@@ -132,7 +143,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref } from 'vue'
 import { useActivity, type ActivityPeriod } from '~/composables/useActivity'
 
 // Composable для работы с данными активности
@@ -148,6 +159,23 @@ const {
   switchPeriod,
   fetchActivity
 } = useActivity()
+
+// Состояние для tooltip
+const hoveredDay = ref<{ date: string; completedReminders: number; xpEarned: number } | null>(null)
+
+/**
+ * Показать tooltip для дня
+ */
+const showTooltip = (day: { date: string; completedReminders: number; xpEarned: number }) => {
+  hoveredDay.value = day
+}
+
+/**
+ * Скрыть tooltip
+ */
+const hideTooltip = () => {
+  hoveredDay.value = null
+}
 
 /**
  * Обработать изменение периода
@@ -170,6 +198,28 @@ const getBarHeight = (value: number): string => {
   if (maxValue.value === 0) return '0%'
   const percentage = (value / maxValue.value) * 100
   return `${Math.max(percentage, value > 0 ? 5 : 0)}%` // Минимум 5% для видимости
+}
+
+/**
+ * Получить класс цвета столбца в зависимости от интенсивности активности
+ * - Высокая активность (>5 напоминаний): темный фиолетовый
+ * - Средняя активность (2-5): средний фиолетовый
+ * - Низкая активность (1): светлый фиолетовый
+ * - Нет активности: серый
+ */
+const getBarColorClass = (completedReminders: number): string => {
+  if (completedReminders === 0) {
+    return 'bg-gray-200'
+  } else if (completedReminders === 1) {
+    // Низкая активность - светлый фиолетовый
+    return 'bg-gradient-to-t from-primaryLight to-[#A78BFA]'
+  } else if (completedReminders >= 2 && completedReminders <= 5) {
+    // Средняя активность - средний фиолетовый
+    return 'bg-gradient-to-t from-primary to-primaryLight'
+  } else {
+    // Высокая активность (>5) - темный фиолетовый
+    return 'bg-gradient-to-t from-primaryDark to-primary'
+  }
 }
 
 /**
@@ -201,7 +251,26 @@ const formatDateLabel = (dateStr: string): string => {
 </script>
 
 <style scoped>
-.activity-chart {
-  /* Дополнительные стили при необходимости */
+.activity-bar {
+  /* Анимация роста столбцов - 500ms для высоты */
+  transition: height 500ms cubic-bezier(0.4, 0, 0.2, 1),
+              transform 300ms cubic-bezier(0.4, 0, 0.2, 1),
+              background-color 300ms ease;
+}
+
+/* Плавная анимация при изменении данных */
+.activity-bar:not(.bg-gray-200) {
+  animation: bar-grow 500ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes bar-grow {
+  from {
+    transform: scaleY(0);
+    transform-origin: bottom;
+  }
+  to {
+    transform: scaleY(1);
+    transform-origin: bottom;
+  }
 }
 </style>

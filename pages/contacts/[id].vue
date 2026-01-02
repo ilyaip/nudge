@@ -1,5 +1,5 @@
 <template>
-  <div :key="String(route.params.id)" class="min-h-screen bg-gray-50 p-4 pb-20">
+  <div :key="String(route.params.id)" class="min-h-screen bg-gray-50 p-4 pb-28">
     <!-- Состояние загрузки -->
     <SkeletonLoader 
       v-if="isLoading && !currentContact" 
@@ -24,10 +24,14 @@
       <header class="flex items-center gap-4">
         <button
           @click="goBack"
-          class="text-gray-600 hover:text-gray-900 text-2xl"
+          class="text-gray-600 hover:text-gray-900 hover:scale-110 text-2xl transition-all"
         >
           ←
         </button>
+        <!-- Круглый аватар/иконка (80px) -->
+        <div class="w-20 h-20 rounded-full gradient-purple-bright flex items-center justify-center text-4xl flex-shrink-0">
+          {{ getCategoryIcon(currentContact.category) }}
+        </div>
         <div class="flex-1">
           <h1 class="text-3xl font-bold text-gray-900">{{ currentContact.name }}</h1>
           <p v-if="currentContact.username" class="text-gray-600 mt-1">
@@ -37,7 +41,7 @@
         <button
           @click="handleDelete"
           :disabled="isDeleting"
-          class="text-red-600 hover:text-red-800 disabled:text-gray-400 text-2xl"
+          class="text-red-600 hover:text-red-800 hover:scale-110 disabled:text-gray-400 text-2xl transition-all"
           title="Удалить контакт"
         >
           🗑️
@@ -45,7 +49,7 @@
       </header>
 
       <!-- Информация о контакте -->
-      <section class="bg-white rounded-lg shadow-md p-6">
+      <section class="bg-white rounded-3xl shadow-md p-6">
         <h2 class="text-xl font-semibold text-gray-900 mb-4">Информация</h2>
         
         <div class="space-y-3">
@@ -74,14 +78,14 @@
       </section>
 
       <!-- Форма конфигурации -->
-      <section class="bg-white rounded-lg shadow-md p-6">
+      <section class="bg-white rounded-3xl shadow-md p-6">
         <h2 class="text-xl font-semibold text-gray-900 mb-4">Настройки отслеживания</h2>
         
         <form @submit.prevent="handleSave" class="space-y-6">
           <!-- Переключатель отслеживания -->
-          <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-            <div>
-              <label class="text-lg font-medium text-gray-900">Отслеживать контакт</label>
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 bg-gray-50 rounded-2xl">
+            <div class="flex-1">
+              <label class="text-base sm:text-lg font-medium text-gray-900 block">Отслеживать контакт</label>
               <p class="text-sm text-gray-600 mt-1">
                 Получать напоминания о необходимости связаться
               </p>
@@ -90,7 +94,7 @@
               type="button"
               @click="formData.isTracked = !formData.isTracked"
               :class="[
-                'relative inline-flex h-8 w-14 items-center rounded-full transition-colors',
+                'relative inline-flex h-8 w-14 items-center rounded-full transition-colors flex-shrink-0',
                 formData.isTracked ? 'bg-green-600' : 'bg-gray-300'
               ]"
             >
@@ -112,7 +116,7 @@
               </label>
               <select
                 v-model="formData.frequency"
-                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                class="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-primary focus:border-transparent"
               >
                 <option value="weekly">Еженедельно (каждые 7 дней)</option>
                 <option value="monthly">Ежемесячно (каждые 30 дней)</option>
@@ -132,8 +136,11 @@
                 min="1"
                 max="365"
                 placeholder="Введите количество дней"
-                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                class="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-primary focus:border-transparent text-base"
               />
+              <p class="text-xs text-gray-500 mt-1">
+                От 1 до 365 дней
+              </p>
             </div>
 
             <!-- Тип коммуникации -->
@@ -146,10 +153,10 @@
                   type="button"
                   @click="formData.communicationType = 'message'"
                   :class="[
-                    'px-4 py-3 rounded-lg font-medium transition-colors',
+                    'px-4 py-3 rounded-2xl font-medium transition-all',
                     formData.communicationType === 'message'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      ? 'bg-primary text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:scale-105'
                   ]"
                 >
                   💬 Сообщение
@@ -158,10 +165,10 @@
                   type="button"
                   @click="formData.communicationType = 'call'"
                   :class="[
-                    'px-4 py-3 rounded-lg font-medium transition-colors',
+                    'px-4 py-3 rounded-2xl font-medium transition-all',
                     formData.communicationType === 'call'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      ? 'bg-primary text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:scale-105'
                   ]"
                 >
                   📞 Звонок
@@ -170,10 +177,10 @@
                   type="button"
                   @click="formData.communicationType = 'meeting'"
                   :class="[
-                    'px-4 py-3 rounded-lg font-medium transition-colors',
+                    'px-4 py-3 rounded-2xl font-medium transition-all',
                     formData.communicationType === 'meeting'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      ? 'bg-primary text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:scale-105'
                   ]"
                 >
                   🤝 Встреча
@@ -191,10 +198,10 @@
                   type="button"
                   @click="formData.category = 'family'"
                   :class="[
-                    'px-4 py-3 rounded-lg font-medium transition-colors',
+                    'px-4 py-3 rounded-2xl font-medium transition-all',
                     formData.category === 'family'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      ? 'bg-primary text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:scale-105'
                   ]"
                 >
                   👨‍👩‍👧 Семья
@@ -203,10 +210,10 @@
                   type="button"
                   @click="formData.category = 'friends'"
                   :class="[
-                    'px-4 py-3 rounded-lg font-medium transition-colors',
+                    'px-4 py-3 rounded-2xl font-medium transition-all',
                     formData.category === 'friends'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      ? 'bg-primary text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:scale-105'
                   ]"
                 >
                   👥 Друзья
@@ -215,10 +222,10 @@
                   type="button"
                   @click="formData.category = 'colleagues'"
                   :class="[
-                    'px-4 py-3 rounded-lg font-medium transition-colors',
+                    'px-4 py-3 rounded-2xl font-medium transition-all',
                     formData.category === 'colleagues'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      ? 'bg-primary text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:scale-105'
                   ]"
                 >
                   💼 Коллеги
@@ -227,10 +234,10 @@
                   type="button"
                   @click="formData.category = 'business'"
                   :class="[
-                    'px-4 py-3 rounded-lg font-medium transition-colors',
+                    'px-4 py-3 rounded-2xl font-medium transition-all',
                     formData.category === 'business'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      ? 'bg-primary text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:scale-105'
                   ]"
                 >
                   🤝 Бизнес
@@ -247,7 +254,7 @@
                 v-model="formData.lastContactDate"
                 type="date"
                 :max="today"
-                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                class="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-primary focus:border-transparent text-base"
               />
               <p class="text-xs text-gray-500 mt-1">
                 Оставьте пустым, если еще не было контакта
@@ -258,9 +265,10 @@
           <!-- Кнопки действий -->
           <div class="flex gap-3 pt-4">
             <button
+              v-ripple="{ color: 'rgba(107, 60, 233, 0.3)' }"
               type="submit"
               :disabled="isSaving"
-              class="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+              class="flex-1 bg-primary hover:bg-primaryLight hover:scale-105 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-6 py-3 rounded-2xl font-medium transition-all flex items-center justify-center gap-2"
             >
               <LoadingSpinner v-if="isSaving" size="small" color="white" />
               <span>{{ isSaving ? 'Сохранение...' : 'Сохранить изменения' }}</span>
@@ -269,7 +277,7 @@
               type="button"
               @click="resetForm"
               :disabled="isSaving"
-              class="px-6 py-3 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 disabled:cursor-not-allowed text-gray-700 rounded-lg font-medium transition-colors"
+              class="px-6 py-3 bg-gray-100 hover:bg-gray-200 hover:scale-105 disabled:bg-gray-50 disabled:cursor-not-allowed text-gray-700 rounded-2xl font-medium transition-all"
             >
               Отменить
             </button>
@@ -278,9 +286,9 @@
       </section>
 
       <!-- История взаимодействий (заглушка) -->
-      <section class="bg-white rounded-lg shadow-md p-6">
+      <section class="bg-white rounded-3xl shadow-md p-6">
         <h2 class="text-xl font-semibold text-gray-900 mb-4">История взаимодействий</h2>
-        <div class="text-center py-8 bg-gray-50 rounded-lg">
+        <div class="text-center py-8 bg-gray-50 rounded-2xl">
           <div class="text-5xl mb-3">📋</div>
           <p class="text-gray-600">История взаимодействий</p>
           <p class="text-sm text-gray-500 mt-1">Будет реализована в следующих задачах</p>

@@ -1,74 +1,82 @@
 <template>
-  <div class="min-h-screen bg-gray-50 p-4 pb-20">
-    <!-- Заголовок -->
-    <header class="mb-6">
-      <div class="flex items-center justify-between">
-        <div>
-          <h1 class="text-3xl font-bold text-gray-900">Контакты</h1>
-          <p class="text-gray-600 mt-1">
-            {{ contactCount.tracked }} из {{ contactCount.total }} отслеживаются
-          </p>
+  <div class="min-h-screen bg-background pb-28 overflow-x-hidden">
+    <div class="p-4 max-w-full overflow-hidden">
+      <!-- Заголовок -->
+      <header class="mb-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <h1 class="text-3xl font-bold text-text">Контакты</h1>
+            <p class="text-textSecondary mt-1">
+              {{ contactCount.tracked }} из {{ contactCount.total }} отслеживаются
+            </p>
+          </div>
+          <button
+            v-ripple
+            @click="handleAddContact"
+            class="bg-primary hover:bg-primaryLight hover:scale-105 text-white px-5 py-2.5 rounded-xl font-semibold transition-all flex items-center gap-2 shadow-sm"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            <span>Добавить</span>
+          </button>
         </div>
-        <button
-          @click="handleAddContact"
-          class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
-        >
-          <span>➕</span>
-          <span>Добавить</span>
-        </button>
-      </div>
-    </header>
+      </header>
 
-    <!-- Состояние загрузки -->
-    <SkeletonLoader 
-      v-if="isLoading && contacts.length === 0" 
-      type="card" 
-      :count="5" 
-      show-header 
-    />
+      <!-- Состояние загрузки -->
+      <SkeletonLoader 
+        v-if="isLoading && contacts.length === 0" 
+        type="card" 
+        :count="5" 
+        show-header 
+      />
 
-    <!-- Ошибка -->
-    <ErrorMessage
-      v-else-if="error"
-      :message="error"
-      title="Ошибка загрузки контактов"
-      type="error"
-      retryable
-      :on-retry="loadContacts"
-    />
+      <!-- Ошибка -->
+      <ErrorMessage
+        v-else-if="error"
+        :message="error"
+        title="Ошибка загрузки контактов"
+        type="error"
+        retryable
+        :on-retry="loadContacts"
+      />
 
-    <!-- Основной контент -->
-    <div v-else class="space-y-4">
+      <!-- Основной контент -->
+      <div v-else class="space-y-4 pb-4">
       <!-- Поиск и фильтры -->
-      <section class="bg-white rounded-lg shadow-md p-4">
+      <section class="bg-backgroundSecondary rounded-3xl shadow-sm p-4 overflow-hidden">
         <div class="space-y-4">
           <!-- Поисковая строка -->
           <div class="relative">
             <input
               v-model="searchQuery"
               type="text"
-              placeholder="Поиск по имени или username..."
-              class="w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Поиск..."
+              class="w-full px-4 py-3 pl-11 pr-10 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-base box-border"
             />
-            <span class="absolute left-3 top-3.5 text-gray-400 text-xl">🔍</span>
+            <svg class="absolute left-3.5 top-3.5 w-5 h-5 text-textSecondary pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
             <button
               v-if="searchQuery"
               @click="searchQuery = ''"
-              class="absolute right-3 top-3.5 text-gray-400 hover:text-gray-600"
+              class="absolute right-3 top-3.5 text-textSecondary hover:text-text transition-colors"
             >
-              ✕
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
           </div>
 
           <!-- Фильтры по категории -->
-          <div class="flex gap-2 overflow-x-auto pb-2">
+          <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
             <button
               @click="selectedCategory = null"
               :class="[
-                'px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors',
+                'px-4 py-2 rounded-xl font-semibold whitespace-nowrap transition-all flex-shrink-0',
                 selectedCategory === null
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-primary text-white shadow-sm'
+                  : 'bg-white text-text hover:bg-gray-50'
               ]"
             >
               Все ({{ contactCount.total }})
@@ -76,10 +84,10 @@
             <button
               @click="selectedCategory = 'family'"
               :class="[
-                'px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors',
+                'px-4 py-2 rounded-xl font-semibold whitespace-nowrap transition-all flex-shrink-0',
                 selectedCategory === 'family'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-primary text-white shadow-sm'
+                  : 'bg-white text-text hover:bg-gray-50'
               ]"
             >
               👨‍👩‍👧 Семья ({{ getCategoryCount('family') }})
@@ -87,10 +95,10 @@
             <button
               @click="selectedCategory = 'friends'"
               :class="[
-                'px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors',
+                'px-4 py-2 rounded-xl font-semibold whitespace-nowrap transition-all flex-shrink-0',
                 selectedCategory === 'friends'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-primary text-white shadow-sm'
+                  : 'bg-white text-text hover:bg-gray-50'
               ]"
             >
               👥 Друзья ({{ getCategoryCount('friends') }})
@@ -98,10 +106,10 @@
             <button
               @click="selectedCategory = 'colleagues'"
               :class="[
-                'px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors',
+                'px-4 py-2 rounded-xl font-semibold whitespace-nowrap transition-all flex-shrink-0',
                 selectedCategory === 'colleagues'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-primary text-white shadow-sm'
+                  : 'bg-white text-text hover:bg-gray-50'
               ]"
             >
               💼 Коллеги ({{ getCategoryCount('colleagues') }})
@@ -109,10 +117,10 @@
             <button
               @click="selectedCategory = 'business'"
               :class="[
-                'px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors',
+                'px-4 py-2 rounded-xl font-semibold whitespace-nowrap transition-all flex-shrink-0',
                 selectedCategory === 'business'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-primary text-white shadow-sm'
+                  : 'bg-white text-text hover:bg-gray-50'
               ]"
             >
               🤝 Бизнес ({{ getCategoryCount('business') }})
@@ -120,14 +128,14 @@
           </div>
 
           <!-- Фильтр по статусу отслеживания -->
-          <div class="flex gap-2">
+          <div class="grid grid-cols-3 gap-2">
             <button
               @click="trackingFilter = 'all'"
               :class="[
-                'flex-1 px-4 py-2 rounded-lg font-medium transition-colors',
+                'px-2 py-2.5 rounded-xl font-semibold transition-all text-sm text-center',
                 trackingFilter === 'all'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-primary text-white shadow-sm'
+                  : 'bg-white text-text hover:bg-gray-50'
               ]"
             >
               Все
@@ -135,24 +143,26 @@
             <button
               @click="trackingFilter = 'tracked'"
               :class="[
-                'flex-1 px-4 py-2 rounded-lg font-medium transition-colors',
+                'px-2 py-2.5 rounded-xl font-semibold transition-all text-sm text-center leading-tight',
                 trackingFilter === 'tracked'
-                  ? 'bg-green-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-green-600 text-white shadow-sm'
+                  : 'bg-white text-text hover:bg-gray-50'
               ]"
             >
-              ✓ Отслеживаются
+              <span class="block">✓</span>
+              <span class="block text-xs">Отслеж.</span>
             </button>
             <button
               @click="trackingFilter = 'untracked'"
               :class="[
-                'flex-1 px-4 py-2 rounded-lg font-medium transition-colors',
+                'px-2 py-2.5 rounded-xl font-semibold transition-all text-sm text-center leading-tight',
                 trackingFilter === 'untracked'
-                  ? 'bg-gray-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-gray-600 text-white shadow-sm'
+                  : 'bg-white text-text hover:bg-gray-50'
               ]"
             >
-              Не отслеживаются
+              <span class="block text-xs">Не</span>
+              <span class="block text-xs">отслеж.</span>
             </button>
           </div>
         </div>
@@ -161,12 +171,12 @@
       <!-- Список контактов -->
       <section>
         <!-- Пустое состояние -->
-        <div v-if="filteredContacts.length === 0" class="bg-white rounded-lg shadow-md p-8 text-center">
+        <div v-if="filteredContacts.length === 0" class="bg-backgroundSecondary rounded-3xl shadow-sm p-8 text-center">
           <div class="text-6xl mb-4">📱</div>
-          <h3 class="text-xl font-semibold text-gray-900 mb-2">
+          <h3 class="text-xl font-bold text-text mb-2">
             {{ searchQuery || selectedCategory || trackingFilter !== 'all' ? 'Контакты не найдены' : 'Нет контактов' }}
           </h3>
-          <p class="text-gray-600 mb-4">
+          <p class="text-textSecondary mb-4">
             {{ searchQuery || selectedCategory || trackingFilter !== 'all' 
               ? 'Попробуйте изменить фильтры или поисковый запрос' 
               : 'Добавьте первый контакт, чтобы начать отслеживание' 
@@ -174,8 +184,9 @@
           </p>
           <button
             v-if="!searchQuery && !selectedCategory && trackingFilter === 'all'"
+            v-ripple
             @click="handleAddContact"
-            class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+            class="bg-primary hover:bg-primaryLight hover:scale-105 text-white px-6 py-3 rounded-xl font-semibold transition-all shadow-sm"
           >
             Добавить контакт
           </button>
@@ -187,63 +198,54 @@
             v-for="contact in filteredContacts"
             :key="contact.id"
             :to="`/contacts/${contact.id}`"
-            class="block bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow cursor-pointer"
+            class="block bg-backgroundSecondary rounded-2xl shadow-sm p-4 hover:shadow-md transition-all cursor-pointer"
           >
-            <div class="flex items-start justify-between">
+            <div class="flex items-center gap-4">
+              <!-- Круглый аватар с иконкой категории -->
+              <div class="w-14 h-14 rounded-full gradient-purple-bright flex items-center justify-center text-2xl flex-shrink-0 shadow-sm">
+                {{ getCategoryIcon(contact.category) }}
+              </div>
+
               <!-- Информация о контакте -->
-              <div class="flex-1">
-                <div class="flex items-center gap-2 mb-2">
-                  <h3 class="text-lg font-semibold text-gray-900">{{ contact.name }}</h3>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 mb-1">
+                  <h3 class="text-base font-bold text-text truncate">{{ contact.name }}</h3>
                   <span
                     v-if="contact.isTracked"
-                    class="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded"
+                    class="bg-green-100 text-green-800 text-xs font-semibold px-2 py-1 rounded-lg flex-shrink-0"
                   >
-                    ✓ Отслеживается
+                    ✓
                   </span>
                 </div>
 
-                <p v-if="contact.username" class="text-sm text-gray-600 mb-2">
-                  @{{ contact.username }}
-                </p>
-
-                <div class="flex flex-wrap gap-2">
-                  <!-- Категория -->
-                  <span class="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded flex items-center gap-1">
-                    <span>{{ getCategoryIcon(contact.category) }}</span>
-                    <span>{{ getCategoryLabel(contact.category) }}</span>
-                  </span>
-
-                  <!-- Частота (только для отслеживаемых) -->
-                  <span
-                    v-if="contact.isTracked"
-                    class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded"
-                  >
-                    {{ getFrequencyLabel(contact.frequency, contact.customFrequencyDays) }}
-                  </span>
-
-                  <!-- Тип коммуникации (только для отслеживаемых) -->
-                  <span
-                    v-if="contact.isTracked"
-                    class="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded"
-                  >
-                    {{ getTypeLabel(contact.communicationType) }}
-                  </span>
+                <!-- Username и категория - вторичная информация -->
+                <div class="flex items-center gap-2 text-sm text-textSecondary mb-1">
+                  <span v-if="contact.username">@{{ contact.username }}</span>
+                  <span v-if="contact.username && contact.category">•</span>
+                  <span>{{ getCategoryLabel(contact.category) }}</span>
                 </div>
 
-                <!-- Дата последнего контакта -->
-                <p v-if="contact.lastContactDate" class="text-xs text-gray-500 mt-2">
-                  Последний контакт: {{ formatDate(contact.lastContactDate) }}
-                </p>
+                <!-- Дополнительная информация для отслеживаемых контактов -->
+                <div v-if="contact.isTracked" class="flex flex-wrap gap-2 text-xs text-textSecondary">
+                  <span>{{ getFrequencyLabel(contact.frequency, contact.customFrequencyDays) }}</span>
+                  <span>•</span>
+                  <span>{{ getTypeLabel(contact.communicationType) }}</span>
+                  <span v-if="contact.lastContactDate">•</span>
+                  <span v-if="contact.lastContactDate">{{ formatDate(contact.lastContactDate) }}</span>
+                </div>
               </div>
 
               <!-- Стрелка -->
-              <div class="ml-4 text-gray-400 text-xl">
-                →
+              <div class="ml-2 text-textSecondary flex-shrink-0">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
               </div>
             </div>
           </NuxtLink>
         </div>
       </section>
+      </div>
     </div>
 
     <!-- Модальное окно добавления контакта -->
@@ -259,11 +261,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { useContacts, type Contact } from '~/composables/useContacts'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useRoute } from 'vue-router'
+import { useContacts } from '~/composables/useContacts'
 
-const router = useRouter()
+const route = useRoute()
 
 // Composable
 const {
@@ -272,8 +274,7 @@ const {
   error,
   contactCount,
   fetchContacts,
-  createContact,
-  clearError
+  createContact
 } = useContacts()
 
 // Локальное состояние для фильтров
@@ -320,15 +321,6 @@ const loadContacts = async () => {
   } catch (err) {
     console.error('Ошибка загрузки контактов:', err)
   }
-}
-
-/**
- * Перейти на страницу деталей контакта
- */
-const navigateToContact = async (contactId: number) => {
-  console.log('[Contacts] Navigating to contact:', contactId)
-  await navigateTo(`/contacts/${contactId}`)
-  console.log('[Contacts] Navigation triggered')
 }
 
 /**
@@ -449,8 +441,34 @@ const formatDate = (dateString: string): string => {
   }
 }
 
-// Загрузить контакты при монтировании компонента
+// Загрузить контакты при монтировании компонента и слушать события
 onMounted(() => {
   loadContacts()
+  
+  // Слушаем событие из нижней навигации
+  window.addEventListener('open-add-contact-modal', handleAddContact)
+  
+  // Проверяем query параметр для открытия модалки
+  if (route.query.add === 'true') {
+    handleAddContact()
+  }
+})
+
+onUnmounted(() => {
+  window.removeEventListener('open-add-contact-modal', handleAddContact)
 })
 </script>
+
+<style scoped>
+/* Предотвращаем горизонтальный скролл */
+input {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Убираем стандартные стили для input на iOS */
+input[type="text"] {
+  -webkit-appearance: none;
+  appearance: none;
+}
+</style>
