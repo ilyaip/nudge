@@ -34,7 +34,7 @@ export interface CreateContactData {
   customFrequencyDays?: number
   communicationType?: 'message' | 'call' | 'meeting'
   category?: 'family' | 'friends' | 'colleagues' | 'business'
-  lastContactDate?: Date | null
+  lastContactDate?: string | null
 }
 
 /**
@@ -48,8 +48,8 @@ export interface UpdateContactData {
   customFrequencyDays?: number
   communicationType?: 'message' | 'call' | 'meeting'
   category?: 'family' | 'friends' | 'colleagues' | 'business'
-  lastContactDate?: Date | null
-  nextReminderDate?: Date | null
+  lastContactDate?: string | null
+  nextReminderDate?: string | null
 }
 
 /**
@@ -266,7 +266,6 @@ export const useContacts = () => {
       }
       
       // Инвалидируем кэш контактов
-      const userId = authStore.user?.id
       if (userId) {
         invalidate(`contacts-${userId}`)
       }

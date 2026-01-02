@@ -1,16 +1,17 @@
 import { defineNuxtPlugin } from '#app'
+import type { PiniaPluginContext } from 'pinia'
 
 /**
  * Plugin для сохранения состояния Pinia в localStorage
  * Автоматически сохраняет и восстанавливает состояние при перезагрузке страницы
  */
 export default defineNuxtPlugin((nuxtApp) => {
-  const pinia = nuxtApp.$pinia
+  const pinia = nuxtApp.$pinia as any
 
   if (!pinia) return
 
   // Подписываемся на изменения в stores
-  pinia.use(({ store }) => {
+  pinia.use(({ store }: PiniaPluginContext) => {
     // Список stores, которые нужно сохранять
     const storesToPersist = ['auth']
     
@@ -35,7 +36,7 @@ export default defineNuxtPlugin((nuxtApp) => {
     }
 
     // Сохраняем состояние при каждом изменении
-    store.$subscribe((mutation, state) => {
+    store.$subscribe((_mutation: any, state: any) => {
       try {
         localStorage.setItem(storageKey, JSON.stringify(state))
       } catch (error) {

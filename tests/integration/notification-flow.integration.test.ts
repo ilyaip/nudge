@@ -240,8 +240,8 @@ describe('Интеграционный тест: Поток уведомлени
     })
 
     it('должен отклонять webhook с неверной подписью', () => {
-      const invalidSignature = 'invalid_signature_123'
-      const expectedSignature = 'valid_signature_456'
+      const invalidSignature: string = 'invalid_signature_123'
+      const expectedSignature: string = 'valid_signature_456'
 
       const isValid = invalidSignature === expectedSignature
       expect(isValid).toBe(false)
@@ -340,6 +340,7 @@ describe('Интеграционный тест: Поток уведомлени
       const contact = {
         id: 1,
         userId: 1,
+        telegramContactId: 'test_contact_123',
         name: 'Тест Контакт',
         username: 'testcontact',
         isTracked: true,
@@ -354,7 +355,15 @@ describe('Интеграционный тест: Поток уведомлени
       }
 
       // 2. Создаем напоминание
-      const reminder = {
+      const reminder: {
+        id: number
+        userId: number
+        contactId: number
+        dueDate: Date
+        completed: boolean
+        notificationSent: boolean
+        completedAt: Date | null
+      } = {
         id: 1,
         userId: contact.userId,
         contactId: contact.id,

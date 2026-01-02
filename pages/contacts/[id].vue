@@ -382,7 +382,7 @@ const handleSave = async () => {
       communicationType: formData.value.communicationType,
       category: formData.value.category,
       lastContactDate: formData.value.lastContactDate 
-        ? new Date(formData.value.lastContactDate) 
+        ? new Date(formData.value.lastContactDate).toISOString() 
         : null
     }
 
