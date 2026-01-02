@@ -183,11 +183,11 @@
 
         <!-- Карточки контактов -->
         <div v-else class="space-y-3">
-          <div
+          <NuxtLink
             v-for="contact in filteredContacts"
             :key="contact.id"
-            @click="navigateToContact(contact.id)"
-            class="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow cursor-pointer"
+            :to="`/contacts/${contact.id}`"
+            class="block bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow cursor-pointer"
           >
             <div class="flex items-start justify-between">
               <!-- Информация о контакте -->
@@ -241,7 +241,7 @@
                 →
               </div>
             </div>
-          </div>
+          </NuxtLink>
         </div>
       </section>
     </div>
@@ -325,8 +325,10 @@ const loadContacts = async () => {
 /**
  * Перейти на страницу деталей контакта
  */
-const navigateToContact = (contactId: number) => {
-  router.push(`/contacts/${contactId}`)
+const navigateToContact = async (contactId: number) => {
+  console.log('[Contacts] Navigating to contact:', contactId)
+  await navigateTo(`/contacts/${contactId}`)
+  console.log('[Contacts] Navigation triggered')
 }
 
 /**

@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50 p-4 pb-20">
+  <div :key="String(route.params.id)" class="min-h-screen bg-gray-50 p-4 pb-20">
     <!-- Состояние загрузки -->
     <SkeletonLoader 
       v-if="isLoading && !currentContact" 
@@ -294,7 +294,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useContacts, type UpdateContactData } from '~/composables/useContacts'
 import { useNotifications } from '~/composables/useNotifications'
@@ -342,11 +342,17 @@ const today = computed(() => {
 const loadContact = async () => {
   try {
     const contactId = parseInt(route.params.id as string)
+    
+    console.log('[Contact Detail] Loading contact:', contactId)
+    
     if (isNaN(contactId)) {
+      console.error('[Contact Detail] Invalid contact ID')
       throw new Error('Неверный ID контакта')
     }
     
     await fetchContact(contactId)
+    
+    console.log('[Contact Detail] Contact loaded:', currentContact.value)
     
     // Заполнить форму данными контакта
     if (currentContact.value) {
@@ -360,9 +366,12 @@ const loadContact = async () => {
           ? new Date(currentContact.value.lastContactDate).toISOString().split('T')[0]
           : ''
       }
+    } else {
+      console.error('[Contact Detail] Contact not found after fetch')
     }
-  } catch (err) {
-    console.error('Ошибка загрузки контакта:', err)
+  } catch (err: any) {
+    console.error('[Contact Detail] Error loading contact:', err)
+    console.error('[Contact Detail] Error details:', err.data || err.message)
   }
 }
 
@@ -498,8 +507,17 @@ const formatDate = (dateString: string): string => {
 
 // Загрузить контакт при монтировании компонента
 onMounted(() => {
+  console.log('[Contact Detail] Component mounted')
   loadContact()
 })
+
+// Следить за изменением ID в URL
+watch(() => route.params.id, (newId, oldId) => {
+  console.log('[Contact Detail] Route ID changed:', oldId, '->', newId)
+  if (newId) {
+    loadContact()
+  }
+}, { immediate: false })
 
 // Очистить текущий контакт при размонтировании
 onUnmounted(() => {
