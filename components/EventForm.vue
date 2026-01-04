@@ -301,12 +301,25 @@
                     ? 'bg-primary/10 border-2 border-primary' 
                     : 'bg-gray-50 hover:bg-gray-100 border-2 border-transparent'"
                 >
-                  <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primaryLight flex items-center justify-center text-white font-semibold">
-                    {{ contact.name.charAt(0).toUpperCase() }}
+                  <div class="relative">
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primaryLight flex items-center justify-center text-white font-semibold">
+                      {{ contact.name.charAt(0).toUpperCase() }}
+                    </div>
+                    <!-- Индикатор связанного пользователя -->
+                    <div 
+                      v-if="contact.linkedUserId"
+                      class="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-primary rounded-full flex items-center justify-center border-2 border-white"
+                      :title="contact.isMutual ? 'Взаимная связь' : 'В системе'"
+                    >
+                      <svg class="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                      </svg>
+                    </div>
                   </div>
                   <div class="flex-1 text-left">
                     <p class="font-medium text-text">{{ contact.name }}</p>
                     <p v-if="contact.username" class="text-xs text-textSecondary">@{{ contact.username }}</p>
+                    <p v-if="contact.linkedUserId" class="text-xs text-primary">Получит уведомление</p>
                   </div>
                   <div v-if="isSelected(contact.id)" class="text-primary">
                     <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
@@ -428,9 +441,9 @@ const minDate = computed(() => {
   return today.toISOString().split('T')[0]
 })
 
-// Доступные контакты для выбора
+// Доступные контакты для выбора (все контакты, не только отслеживаемые)
 const availableContacts = computed(() => {
-  return contacts.value.filter(c => c.isTracked)
+  return contacts.value
 })
 
 // Выбранные контакты

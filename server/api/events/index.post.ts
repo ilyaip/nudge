@@ -9,6 +9,7 @@ import {
   type RecurrencePattern
 } from '../../utils/events'
 import { generateOccurrences, type RecurrenceConfig } from '../../utils/recurrence'
+import { getNotificationService } from '../../utils/notifications'
 
 /**
  * POST /api/events
@@ -132,11 +133,7 @@ export default defineEventHandler(async (event) => {
       const contactsData = await db
         .select()
         .from(contacts)
-        .where(
-          and(
-            eq(contacts.userId, user.id)
-          )
-        )
+        .where(eq(contacts.userId, user.id))
 
       // Фильтруем только те контакты, которые принадлежат пользователю
       const userContactIds = new Set(contactsData.map(c => c.id))
@@ -145,18 +142,24 @@ export default defineEventHandler(async (event) => {
       // Все события (родительское + дочерние) для добавления участников
       const allEventIds = [createdEvent.id, ...childEvents.map(e => e.id)]
 
+      // Сервис уведомлений
+      const notificationService = getNotificationService()
+
       for (const contactId of validContactIds) {
         const contact = contactsData.find(c => c.id === contactId)
         if (!contact) continue
 
         // Создаём записи участников для всех событий серии
         for (const eventId of allEventIds) {
+          // Для связанных контактов статус pending, для остальных - accepted (они не могут ответить)
+          const participantStatus = contact.linkedUserId ? 'pending' : 'accepted'
+          
           const [participant] = await db
             .insert(eventParticipants)
             .values({
               eventId,
               contactId: contact.id,
-              status: 'pending'
+              status: participantStatus
             })
             .returning()
 
@@ -166,9 +169,8 @@ export default defineEventHandler(async (event) => {
           }
         }
 
-        // Если контакт связан с пользователем системы, создаём приглашение
+        // Если контакт связан с пользователем системы, создаём приглашение и отправляем уведомление
         // Requirement 6.2: send invitation notification for linked contacts
-        // Приглашение создаётся только для родительского события
         if (contact.linkedUserId) {
           const [invitation] = await db
             .insert(invitations)
@@ -181,6 +183,19 @@ export default defineEventHandler(async (event) => {
             .returning()
 
           createdInvitations.push(invitation)
+
+          // Отправляем уведомление о приглашении
+          try {
+            await notificationService.sendInvitation(
+              contact.linkedUserId,
+              createdEvent,
+              { firstName: user.firstName, lastName: user.lastName, username: user.username }
+            )
+            console.log(`[Events] Invitation notification sent to user ${contact.linkedUserId}`)
+          } catch (notifError) {
+            console.error(`[Events] Failed to send invitation notification:`, notifError)
+            // Не прерываем создание события из-за ошибки уведомления
+          }
         }
         // Requirement 6.3: non-linked contacts are added without notification
       }
