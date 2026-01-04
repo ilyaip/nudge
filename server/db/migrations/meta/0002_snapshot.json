@@ -1,0 +1,232 @@
+{
+  "id": "0002_social_events_notifications",
+  "prevId": "0001_add_performance_indexes",
+  "version": "5",
+  "dialect": "pg",
+  "tables": {
+    "users": {
+      "name": "users",
+      "schema": "",
+      "columns": {
+        "id": { "name": "id", "type": "serial", "primaryKey": true, "notNull": true },
+        "telegram_id": { "name": "telegram_id", "type": "varchar(255)", "primaryKey": false, "notNull": true },
+        "username": { "name": "username", "type": "varchar(255)", "primaryKey": false, "notNull": false },
+        "first_name": { "name": "first_name", "type": "varchar(255)", "primaryKey": false, "notNull": false },
+        "last_name": { "name": "last_name", "type": "varchar(255)", "primaryKey": false, "notNull": false },
+        "current_streak": { "name": "current_streak", "type": "integer", "primaryKey": false, "notNull": true, "default": 0 },
+        "longest_streak": { "name": "longest_streak", "type": "integer", "primaryKey": false, "notNull": true, "default": 0 },
+        "total_xp": { "name": "total_xp", "type": "integer", "primaryKey": false, "notNull": true, "default": 0 },
+        "level": { "name": "level", "type": "integer", "primaryKey": false, "notNull": true, "default": 1 },
+        "last_activity_date": { "name": "last_activity_date", "type": "timestamp", "primaryKey": false, "notNull": false },
+        "created_at": { "name": "created_at", "type": "timestamp", "primaryKey": false, "notNull": true, "default": "now()" },
+        "updated_at": { "name": "updated_at", "type": "timestamp", "primaryKey": false, "notNull": true, "default": "now()" }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "users_telegram_id_unique": { "name": "users_telegram_id_unique", "columns": ["telegram_id"], "nullsNotDistinct": false }
+      }
+    },
+    "contacts": {
+      "name": "contacts",
+      "schema": "",
+      "columns": {
+        "id": { "name": "id", "type": "serial", "primaryKey": true, "notNull": true },
+        "user_id": { "name": "user_id", "type": "integer", "primaryKey": false, "notNull": true },
+        "telegram_contact_id": { "name": "telegram_contact_id", "type": "varchar(255)", "primaryKey": false, "notNull": true },
+        "name": { "name": "name", "type": "varchar(255)", "primaryKey": false, "notNull": true },
+        "username": { "name": "username", "type": "varchar(255)", "primaryKey": false, "notNull": false },
+        "is_tracked": { "name": "is_tracked", "type": "boolean", "primaryKey": false, "notNull": true, "default": false },
+        "frequency": { "name": "frequency", "type": "varchar(50)", "primaryKey": false, "notNull": true, "default": "'monthly'" },
+        "custom_frequency_days": { "name": "custom_frequency_days", "type": "integer", "primaryKey": false, "notNull": false },
+        "communication_type": { "name": "communication_type", "type": "varchar(50)", "primaryKey": false, "notNull": true, "default": "'message'" },
+        "category": { "name": "category", "type": "varchar(50)", "primaryKey": false, "notNull": true, "default": "'friends'" },
+        "last_contact_date": { "name": "last_contact_date", "type": "timestamp", "primaryKey": false, "notNull": false },
+        "next_reminder_date": { "name": "next_reminder_date", "type": "timestamp", "primaryKey": false, "notNull": false },
+        "linked_user_id": { "name": "linked_user_id", "type": "integer", "primaryKey": false, "notNull": false },
+        "is_mutual": { "name": "is_mutual", "type": "boolean", "primaryKey": false, "notNull": true, "default": false },
+        "created_at": { "name": "created_at", "type": "timestamp", "primaryKey": false, "notNull": true, "default": "now()" },
+        "updated_at": { "name": "updated_at", "type": "timestamp", "primaryKey": false, "notNull": true, "default": "now()" }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "contacts_user_id_users_id_fk": {
+          "name": "contacts_user_id_users_id_fk",
+          "tableFrom": "contacts",
+          "tableTo": "users",
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "contacts_linked_user_id_users_id_fk": {
+          "name": "contacts_linked_user_id_users_id_fk",
+          "tableFrom": "contacts",
+          "tableTo": "users",
+          "columnsFrom": ["linked_user_id"],
+          "columnsTo": ["id"],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "events": {
+      "name": "events",
+      "schema": "",
+      "columns": {
+        "id": { "name": "id", "type": "serial", "primaryKey": true, "notNull": true },
+        "organizer_id": { "name": "organizer_id", "type": "integer", "primaryKey": false, "notNull": true },
+        "title": { "name": "title", "type": "varchar(255)", "primaryKey": false, "notNull": true },
+        "type": { "name": "type", "type": "varchar(50)", "primaryKey": false, "notNull": true },
+        "custom_type": { "name": "custom_type", "type": "varchar(100)", "primaryKey": false, "notNull": false },
+        "description": { "name": "description", "type": "text", "primaryKey": false, "notNull": false },
+        "start_date": { "name": "start_date", "type": "timestamp", "primaryKey": false, "notNull": true },
+        "end_date": { "name": "end_date", "type": "timestamp", "primaryKey": false, "notNull": true },
+        "duration": { "name": "duration", "type": "integer", "primaryKey": false, "notNull": true },
+        "status": { "name": "status", "type": "varchar(20)", "primaryKey": false, "notNull": true, "default": "'scheduled'" },
+        "is_recurring": { "name": "is_recurring", "type": "boolean", "primaryKey": false, "notNull": true, "default": false },
+        "recurrence_pattern": { "name": "recurrence_pattern", "type": "varchar(20)", "primaryKey": false, "notNull": false },
+        "recurrence_interval": { "name": "recurrence_interval", "type": "integer", "primaryKey": false, "notNull": false },
+        "parent_event_id": { "name": "parent_event_id", "type": "integer", "primaryKey": false, "notNull": false },
+        "reminder_minutes": { "name": "reminder_minutes", "type": "integer", "primaryKey": false, "notNull": true, "default": 60 },
+        "created_at": { "name": "created_at", "type": "timestamp", "primaryKey": false, "notNull": true, "default": "now()" },
+        "updated_at": { "name": "updated_at", "type": "timestamp", "primaryKey": false, "notNull": true, "default": "now()" }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "events_organizer_id_users_id_fk": {
+          "name": "events_organizer_id_users_id_fk",
+          "tableFrom": "events",
+          "tableTo": "users",
+          "columnsFrom": ["organizer_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "event_participants": {
+      "name": "event_participants",
+      "schema": "",
+      "columns": {
+        "id": { "name": "id", "type": "serial", "primaryKey": true, "notNull": true },
+        "event_id": { "name": "event_id", "type": "integer", "primaryKey": false, "notNull": true },
+        "contact_id": { "name": "contact_id", "type": "integer", "primaryKey": false, "notNull": true },
+        "status": { "name": "status", "type": "varchar(20)", "primaryKey": false, "notNull": true, "default": "'pending'" },
+        "responded_at": { "name": "responded_at", "type": "timestamp", "primaryKey": false, "notNull": false },
+        "created_at": { "name": "created_at", "type": "timestamp", "primaryKey": false, "notNull": true, "default": "now()" }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "event_participants_event_id_events_id_fk": {
+          "name": "event_participants_event_id_events_id_fk",
+          "tableFrom": "event_participants",
+          "tableTo": "events",
+          "columnsFrom": ["event_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "event_participants_contact_id_contacts_id_fk": {
+          "name": "event_participants_contact_id_contacts_id_fk",
+          "tableFrom": "event_participants",
+          "tableTo": "contacts",
+          "columnsFrom": ["contact_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "invitations": {
+      "name": "invitations",
+      "schema": "",
+      "columns": {
+        "id": { "name": "id", "type": "serial", "primaryKey": true, "notNull": true },
+        "event_id": { "name": "event_id", "type": "integer", "primaryKey": false, "notNull": true },
+        "inviter_id": { "name": "inviter_id", "type": "integer", "primaryKey": false, "notNull": true },
+        "invitee_id": { "name": "invitee_id", "type": "integer", "primaryKey": false, "notNull": true },
+        "status": { "name": "status", "type": "varchar(20)", "primaryKey": false, "notNull": true, "default": "'pending'" },
+        "responded_at": { "name": "responded_at", "type": "timestamp", "primaryKey": false, "notNull": false },
+        "created_at": { "name": "created_at", "type": "timestamp", "primaryKey": false, "notNull": true, "default": "now()" }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "invitations_event_id_events_id_fk": {
+          "name": "invitations_event_id_events_id_fk",
+          "tableFrom": "invitations",
+          "tableTo": "events",
+          "columnsFrom": ["event_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "invitations_inviter_id_users_id_fk": {
+          "name": "invitations_inviter_id_users_id_fk",
+          "tableFrom": "invitations",
+          "tableTo": "users",
+          "columnsFrom": ["inviter_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "invitations_invitee_id_users_id_fk": {
+          "name": "invitations_invitee_id_users_id_fk",
+          "tableFrom": "invitations",
+          "tableTo": "users",
+          "columnsFrom": ["invitee_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "notification_settings": {
+      "name": "notification_settings",
+      "schema": "",
+      "columns": {
+        "id": { "name": "id", "type": "serial", "primaryKey": true, "notNull": true },
+        "user_id": { "name": "user_id", "type": "integer", "primaryKey": false, "notNull": true },
+        "event_reminders": { "name": "event_reminders", "type": "boolean", "primaryKey": false, "notNull": true, "default": true },
+        "invitation_notifications": { "name": "invitation_notifications", "type": "boolean", "primaryKey": false, "notNull": true, "default": true },
+        "connection_notifications": { "name": "connection_notifications", "type": "boolean", "primaryKey": false, "notNull": true, "default": true },
+        "reminder_notifications": { "name": "reminder_notifications", "type": "boolean", "primaryKey": false, "notNull": true, "default": true },
+        "default_reminder_minutes": { "name": "default_reminder_minutes", "type": "integer", "primaryKey": false, "notNull": true, "default": 60 },
+        "created_at": { "name": "created_at", "type": "timestamp", "primaryKey": false, "notNull": true, "default": "now()" },
+        "updated_at": { "name": "updated_at", "type": "timestamp", "primaryKey": false, "notNull": true, "default": "now()" }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "notification_settings_user_id_users_id_fk": {
+          "name": "notification_settings_user_id_users_id_fk",
+          "tableFrom": "notification_settings",
+          "tableTo": "users",
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "notification_settings_user_id_unique": { "name": "notification_settings_user_id_unique", "columns": ["user_id"], "nullsNotDistinct": false }
+      }
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  }
+}

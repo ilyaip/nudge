@@ -1,5 +1,6 @@
 import { db, schema } from '../db'
 import { achievementSeeds } from '../db/seeds/achievements'
+import { sql } from 'drizzle-orm'
 
 /**
  * Плагин Nitro для автоматического заполнения таблицы достижений
@@ -9,6 +10,20 @@ export default defineNitroPlugin(async (nitroApp) => {
   console.log('[Seed Plugin] Проверка таблицы достижений...')
   
   try {
+    // Сначала проверяем, существует ли таблица
+    const tableExists = await db.execute(sql`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = 'achievements'
+      )
+    `)
+    
+    if (!tableExists[0]?.exists) {
+      console.log('[Seed Plugin] ⚠️ Таблица achievements не существует. Выполните миграции: make migrate-dev')
+      return
+    }
+    
     // Проверяем, есть ли уже достижения в базе
     const existing = await db.select().from(schema.achievements)
     

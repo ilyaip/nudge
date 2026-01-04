@@ -17,6 +17,8 @@ describe('Reminders API', () => {
         category: 'friends',
         lastContactDate: new Date('2024-01-01'),
         nextReminderDate: null,
+        linkedUserId: null,
+        isMutual: false,
         createdAt: new Date('2023-12-01'),
         updatedAt: new Date('2024-01-01')
       }
@@ -41,6 +43,8 @@ describe('Reminders API', () => {
         category: 'friends',
         lastContactDate: new Date('2024-01-01'),
         nextReminderDate: null,
+        linkedUserId: null,
+        isMutual: false,
         createdAt: new Date('2023-12-01'),
         updatedAt: new Date('2024-01-01')
       }
@@ -65,6 +69,8 @@ describe('Reminders API', () => {
         category: 'friends',
         lastContactDate: new Date('2024-01-01'),
         nextReminderDate: null,
+        linkedUserId: null,
+        isMutual: false,
         createdAt: new Date('2023-12-01'),
         updatedAt: new Date('2024-01-01')
       }
@@ -89,6 +95,8 @@ describe('Reminders API', () => {
         category: 'friends',
         lastContactDate: new Date('2024-01-01'),
         nextReminderDate: null,
+        linkedUserId: null,
+        isMutual: false,
         createdAt: new Date('2023-12-01'),
         updatedAt: new Date('2024-01-01')
       }

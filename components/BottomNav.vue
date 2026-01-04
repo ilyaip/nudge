@@ -47,9 +47,9 @@
         </svg>
       </NuxtLink>
 
-      <!-- Center Action Button (Add Contact) -->
+      <!-- Center Action Button (Create Event) -->
       <button
-        @click="handleAddContact"
+        @click="handleCenterAction"
         class="center-button"
       >
         <div class="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-primaryLight shadow-lg flex items-center justify-center transition-transform duration-300 hover:scale-105 active:scale-95">
@@ -135,16 +135,12 @@ const isActive = (path: string): boolean => {
 }
 
 /**
- * Обработать добавление контакта
+ * Обработать нажатие центральной кнопки
+ * Requirement 4.6: WHEN the "+" button in navigation is pressed, THE System SHALL open the event creation form
  */
-const handleAddContact = () => {
-  // Переходим на страницу контактов и открываем модалку
-  if (route.path !== '/contacts') {
-    router.push('/contacts?add=true')
-  } else {
-    // Если уже на странице контактов, эмитим событие
-    window.dispatchEvent(new CustomEvent('open-add-contact-modal'))
-  }
+const handleCenterAction = () => {
+  // Переходим на страницу создания события
+  router.push('/events/create')
 }
 </script>
 

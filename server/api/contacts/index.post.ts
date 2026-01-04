@@ -1,6 +1,7 @@
 import { db, schema } from '../../db'
 import { contacts, type NewContact } from '../../db/schema'
 import { eq } from 'drizzle-orm'
+import { findLinkedUserId, checkAndUpdateMutualConnection } from '../../utils/connections'
 
 interface CreateContactRequest {
   telegramContactId: string
@@ -90,6 +91,9 @@ export default defineEventHandler(async (event) => {
       })
     }
 
+    // Проверяем, есть ли пользователь с таким telegramId в системе
+    const linkedUserId = await findLinkedUserId(body.telegramContactId)
+
     // Создать новый контакт (используем database user.id)
     const newContact: NewContact = {
       userId: user.id,
@@ -102,7 +106,9 @@ export default defineEventHandler(async (event) => {
       communicationType: body.communicationType || 'message',
       category: body.category || 'friends',
       lastContactDate: body.lastContactDate || null,
-      nextReminderDate: null // Будет рассчитано позже
+      nextReminderDate: null, // Будет рассчитано позже
+      linkedUserId: linkedUserId,
+      isMutual: false
     }
 
     const createdContacts = await db
@@ -110,9 +116,20 @@ export default defineEventHandler(async (event) => {
       .values(newContact)
       .returning()
 
+    const createdContact = createdContacts[0]
+
+    // Проверяем и обновляем взаимную связь
+    if (linkedUserId) {
+      const isMutual = await checkAndUpdateMutualConnection(user.id, linkedUserId)
+      if (isMutual) {
+        // Обновляем созданный контакт с флагом isMutual
+        createdContact.isMutual = true
+      }
+    }
+
     return {
       success: true,
-      contact: createdContacts[0]
+      contact: createdContact
     }
   } catch (error: any) {
     if (error.statusCode) {

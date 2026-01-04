@@ -18,6 +18,9 @@ export interface Contact {
   category: 'family' | 'friends' | 'colleagues' | 'business'
   lastContactDate: string | null
   nextReminderDate: string | null
+  // Social connections fields
+  linkedUserId: number | null
+  isMutual: boolean
   createdAt: string
   updatedAt: string
 }

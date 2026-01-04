@@ -148,6 +148,11 @@
         </div>
       </section>
 
+      <!-- Настройки уведомлений -->
+      <section data-section="notifications" class="bg-backgroundSecondary rounded-3xl shadow-sm p-6">
+        <NotificationSettings />
+      </section>
+
       <!-- Действия -->
       <section class="bg-backgroundSecondary rounded-3xl shadow-sm overflow-hidden">
         <button 
@@ -254,8 +259,11 @@ const handleAvatarChange = async (event: Event) => {
 }
 
 const handleSettings = () => {
-  // TODO: Открыть настройки
-  showSuccess('Настройки скоро будут доступны', '⚙️')
+  // Прокрутить к секции настроек уведомлений
+  const notificationSection = document.querySelector('[data-section="notifications"]')
+  if (notificationSection) {
+    notificationSection.scrollIntoView({ behavior: 'smooth' })
+  }
 }
 
 const handleExportData = () => {

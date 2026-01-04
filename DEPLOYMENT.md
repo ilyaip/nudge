@@ -59,7 +59,20 @@
 DATABASE_URL=<Internal Database URL из PostgreSQL сервиса>
 TELEGRAM_BOT_TOKEN=<ваш токен от BotFather>
 NODE_ENV=production
+ENABLE_SCHEDULER=true
+APP_URL=https://your-app.onrender.com
 ```
+
+**Описание переменных:**
+
+| Переменная | Обязательная | Описание |
+|------------|--------------|----------|
+| `DATABASE_URL` | Да | URL подключения к PostgreSQL |
+| `TELEGRAM_BOT_TOKEN` | Да | Токен бота от @BotFather |
+| `NODE_ENV` | Да | Окружение (production) |
+| `ENABLE_SCHEDULER` | Нет | Включить планировщик событий (true/false) |
+| `APP_URL` | Нет | URL приложения для ссылок в уведомлениях |
+| `TELEGRAM_WEBHOOK_SECRET` | Нет | Секрет для верификации webhook |
 
 **Где взять DATABASE_URL:**
 1. Открыть PostgreSQL сервис в Render

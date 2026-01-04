@@ -276,6 +276,8 @@ describe('Интеграционный тест: Поток уведомлени
         category: 'friends' as const,
         lastContactDate: new Date(),
         nextReminderDate: null,
+        linkedUserId: null,
+        isMutual: false,
         createdAt: new Date(),
         updatedAt: new Date()
       }
@@ -350,6 +352,8 @@ describe('Интеграционный тест: Поток уведомлени
         category: 'friends' as const,
         lastContactDate: new Date('2024-01-01'),
         nextReminderDate: new Date('2024-01-08'),
+        linkedUserId: null,
+        isMutual: false,
         createdAt: new Date(),
         updatedAt: new Date()
       }

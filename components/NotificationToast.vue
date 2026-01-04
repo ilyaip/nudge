@@ -143,7 +143,7 @@ const closeButtonClass = (type: string): string => {
 </script>
 
 <style scoped>
-/* Анимации для toast */
+/* Анимации для toast - slide in from right */
 .toast-enter-active,
 .toast-leave-active {
   transition: all 0.3s ease;
@@ -151,12 +151,12 @@ const closeButtonClass = (type: string): string => {
 
 .toast-enter-from {
   opacity: 0;
-  transform: translateY(-20px) scale(0.95);
+  transform: translateX(100%);
 }
 
 .toast-leave-to {
   opacity: 0;
-  transform: translateY(-10px) scale(0.95);
+  transform: translateX(100%);
 }
 
 .toast-move {

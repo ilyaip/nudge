@@ -50,6 +50,9 @@ COPY --from=deps --chown=nuxtjs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=nuxtjs:nodejs /app/.output ./.output
 COPY --from=builder --chown=nuxtjs:nodejs /app/package*.json ./
 
+# Копируем миграции для автоматического применения при старте
+COPY --from=builder --chown=nuxtjs:nodejs /app/server/db/migrations ./server/db/migrations
+
 # Переключаемся на непривилегированного пользователя
 USER nuxtjs
 

@@ -30,9 +30,16 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
           </svg>
         </button>
-        <!-- Аватар -->
-        <div class="w-14 h-14 rounded-full gradient-purple-bright flex items-center justify-center text-2xl flex-shrink-0">
-          {{ getCategoryIcon(currentContact.category) }}
+        <!-- Аватар с LinkedBadge -->
+        <div class="relative flex-shrink-0">
+          <div class="w-14 h-14 rounded-full gradient-purple-bright flex items-center justify-center text-2xl">
+            {{ getCategoryIcon(currentContact.category) }}
+          </div>
+          <!-- Бейдж связанного пользователя -->
+          <LinkedBadge 
+            v-if="currentContact.linkedUserId" 
+            :is-mutual="currentContact.isMutual" 
+          />
         </div>
         <div class="flex-1 min-w-0">
           <h1 class="text-xl font-bold text-text truncate">{{ currentContact.name }}</h1>
@@ -61,6 +68,19 @@
             <span class="text-sm text-textSecondary">Категория</span>
             <span class="text-sm font-medium text-text">
               {{ getCategoryIcon(currentContact.category) }} {{ getCategoryLabel(currentContact.category) }}
+            </span>
+          </div>
+          
+          <!-- Статус связи -->
+          <div v-if="currentContact.linkedUserId" class="flex items-center justify-between py-2 border-b border-gray-100">
+            <span class="text-sm text-textSecondary">Статус связи</span>
+            <span 
+              class="text-sm font-medium px-2 py-1 rounded-lg"
+              :class="currentContact.isMutual 
+                ? 'bg-primary/10 text-primary' 
+                : 'bg-green-100 text-green-700'"
+            >
+              {{ currentContact.isMutual ? '🤝 Взаимная связь' : '✓ В системе' }}
             </span>
           </div>
           

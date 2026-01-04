@@ -131,19 +131,11 @@ export async function seedAchievements() {
     console.log(`Успешно добавлено ${achievementSeeds.length} достижений`)
   } catch (error) {
     console.error('Ошибка при заполнении таблицы достижений:', error)
-    throw error
+    // Не бросаем ошибку в dev режиме
+    if (process.env.NODE_ENV === 'production') {
+      throw error
+    }
   }
 }
 
-// Если файл запущен напрямую, выполняем seed
-if (import.meta.url === `file://${process.argv[1]}`) {
-  seedAchievements()
-    .then(() => {
-      console.log('Заполнение завершено')
-      process.exit(0)
-    })
-    .catch((error) => {
-      console.error('Ошибка:', error)
-      process.exit(1)
-    })
-}
+// Автоматический вызов убран - используйте npm run db:seed:achievements или миграции

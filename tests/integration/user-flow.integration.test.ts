@@ -155,6 +155,8 @@ describe('Интеграционный тест: Полный пользоват
         category: 'colleagues' as const,
         lastContactDate: new Date('2024-01-01'),
         nextReminderDate: null,
+        linkedUserId: null,
+        isMutual: false,
         createdAt: new Date('2023-12-01'),
         updatedAt: new Date('2024-01-01')
       }
@@ -279,6 +281,8 @@ describe('Интеграционный тест: Полный пользоват
         category: 'friends' as const,
         lastContactDate: null,
         nextReminderDate: null,
+        linkedUserId: null,
+        isMutual: false,
         createdAt: new Date(),
         updatedAt: new Date()
       }

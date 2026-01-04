@@ -10,16 +10,36 @@
               {{ contactCount.tracked }} из {{ contactCount.total }} отслеживаются
             </p>
           </div>
-          <button
-            v-ripple
-            @click="handleAddContact"
-            class="bg-primary hover:bg-primaryLight hover:scale-105 text-white px-5 py-2.5 rounded-xl font-semibold transition-all flex items-center gap-2 shadow-sm"
-          >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-            </svg>
-            <span>Добавить</span>
-          </button>
+          <div class="flex items-center gap-2">
+            <!-- Кнопка связей -->
+            <NuxtLink
+              to="/connections"
+              class="w-11 h-11 rounded-xl bg-backgroundSecondary hover:bg-gray-100 flex items-center justify-center transition-all relative"
+              title="Связи"
+            >
+              <svg class="w-6 h-6 text-text" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+              <!-- Индикатор новых связей -->
+              <span 
+                v-if="pendingConnectionsCount > 0"
+                class="absolute -top-1 -right-1 w-5 h-5 bg-primary text-white text-xs font-bold rounded-full flex items-center justify-center"
+              >
+                {{ pendingConnectionsCount > 9 ? '9+' : pendingConnectionsCount }}
+              </span>
+            </NuxtLink>
+            <!-- Кнопка добавления -->
+            <button
+              v-ripple
+              @click="handleAddContact"
+              class="bg-primary hover:bg-primaryLight hover:scale-105 text-white px-5 py-2.5 rounded-xl font-semibold transition-all flex items-center gap-2 shadow-sm"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+              </svg>
+              <span>Добавить</span>
+            </button>
+          </div>
         </div>
       </header>
 
@@ -201,9 +221,16 @@
             class="block bg-backgroundSecondary rounded-2xl shadow-sm p-4 hover:shadow-md transition-all cursor-pointer"
           >
             <div class="flex items-center gap-4">
-              <!-- Круглый аватар с иконкой категории -->
-              <div class="w-14 h-14 rounded-full gradient-purple-bright flex items-center justify-center text-2xl flex-shrink-0 shadow-sm">
-                {{ getCategoryIcon(contact.category) }}
+              <!-- Круглый аватар с иконкой категории и LinkedBadge -->
+              <div class="relative flex-shrink-0">
+                <div class="w-14 h-14 rounded-full gradient-purple-bright flex items-center justify-center text-2xl shadow-sm">
+                  {{ getCategoryIcon(contact.category) }}
+                </div>
+                <!-- Бейдж связанного пользователя -->
+                <LinkedBadge 
+                  v-if="contact.linkedUserId" 
+                  :is-mutual="contact.isMutual" 
+                />
               </div>
 
               <!-- Информация о контакте -->
@@ -264,6 +291,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useContacts } from '~/composables/useContacts'
+import { useConnections } from '~/composables/useConnections'
 
 const route = useRoute()
 
@@ -276,6 +304,11 @@ const {
   fetchContacts,
   createContact
 } = useContacts()
+
+const { pendingCount, fetchAddedBy } = useConnections()
+
+// Количество ожидающих связей для индикатора
+const pendingConnectionsCount = computed(() => pendingCount.value)
 
 // Локальное состояние для фильтров
 const searchQuery = ref('')
@@ -444,6 +477,11 @@ const formatDate = (dateString: string): string => {
 // Загрузить контакты при монтировании компонента и слушать события
 onMounted(() => {
   loadContacts()
+  
+  // Загружаем количество ожидающих связей для индикатора
+  fetchAddedBy().catch(() => {
+    // Игнорируем ошибки - индикатор просто не покажется
+  })
   
   // Слушаем событие из нижней навигации
   window.addEventListener('open-add-contact-modal', handleAddContact)

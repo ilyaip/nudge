@@ -16,10 +16,14 @@
           </div>
         </NuxtLink>
         
-        <!-- Уведомления -->
-        <button class="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+        <!-- Календарь (Requirement 10.1: открывать CalendarModal по клику на иконку) -->
+        <button 
+          @click="isCalendarOpen = true"
+          class="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-white/30 transition-colors"
+          aria-label="Открыть календарь"
+        >
           <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
         </button>
       </div>
@@ -92,6 +96,70 @@
         </div>
       </section>
 
+      <!-- Ближайшие события (Requirement 9.1, 9.2, 9.5) -->
+      <section v-if="upcomingEvents.length > 0">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-lg font-bold text-text">📅 Ближайшие события</h2>
+          <span class="bg-primary/10 text-primary text-sm font-semibold px-3 py-1 rounded-full">
+            {{ upcomingEvents.length }}
+          </span>
+        </div>
+        
+        <!-- Горизонтальный скролл EventCard -->
+        <div class="overflow-x-auto -mx-4 px-4 pb-2 scrollbar-hide">
+          <div class="flex gap-3" :style="{ minWidth: 'max-content' }">
+            <div 
+              v-for="event in upcomingEvents" 
+              :key="event.id"
+              class="w-72 flex-shrink-0"
+            >
+              <EventCard 
+                :event="event" 
+                :show-participants="true"
+                :show-arrow="false"
+                @click="handleEventClick(event)"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Приглашения на события (Requirement 7.1) -->
+      <section v-if="invitationCount > 0">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-lg font-bold text-text">📬 Приглашения</h2>
+          <NuxtLink 
+            to="/invitations"
+            class="bg-primary/10 text-primary text-sm font-semibold px-3 py-1 rounded-full hover:bg-primary/20 transition-colors"
+          >
+            {{ invitationCount }} новых →
+          </NuxtLink>
+        </div>
+        
+        <!-- Превью первых 2 приглашений -->
+        <div class="space-y-2">
+          <NuxtLink 
+            v-for="invitation in pendingInvitations.slice(0, 2)" 
+            :key="invitation.id"
+            to="/invitations"
+            class="block bg-backgroundSecondary rounded-2xl p-3 hover:shadow-md transition-all"
+          >
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center flex-shrink-0">
+                <span class="text-lg">{{ getInvitationIcon(invitation.event?.type) }}</span>
+              </div>
+              <div class="flex-1 min-w-0">
+                <h3 class="font-semibold text-text text-sm truncate">{{ invitation.event?.title || 'Событие' }}</h3>
+                <p class="text-xs text-textSecondary">
+                  от {{ getInviterDisplayName(invitation.inviter) }}
+                </p>
+              </div>
+              <span class="text-xs text-primary font-medium flex-shrink-0">Ответить</span>
+            </div>
+          </NuxtLink>
+        </div>
+      </section>
+
       <!-- Статистика геймификации -->
       <section>
         <h2 class="text-lg font-bold text-text mb-3">Статистика</h2>
@@ -155,10 +223,10 @@
             <div 
               v-for="reminder in todayReminders" 
               :key="reminder.id"
-              class="bg-white border border-gray-100 rounded-xl p-3 hover:shadow-md transition-all"
+              class="bg-white border border-gray-100 rounded-xl p-3 hover:shadow-lg hover:border-primary/30 transition-all duration-500"
             >
               <div class="flex items-center gap-3">
-                <div class="w-12 h-12 rounded-full gradient-purple-bright flex items-center justify-center text-xl flex-shrink-0">
+                <div class="w-12 h-12 rounded-full bg-gradient-to-r from-primary to-primaryLight flex items-center justify-center text-xl flex-shrink-0">
                   {{ getCategoryIcon(reminder.contact?.category) }}
                 </div>
 
@@ -171,7 +239,7 @@
                   v-ripple
                   @click="handleCompleteReminder(reminder.id)"
                   :disabled="isCompletingReminder"
-                  class="w-10 h-10 rounded-xl bg-primary hover:bg-primaryLight disabled:bg-gray-300 text-white flex items-center justify-center transition-all flex-shrink-0"
+                  class="w-10 h-10 rounded-xl bg-primary hover:bg-primaryLight hover:scale-105 disabled:bg-gray-300 text-white flex items-center justify-center transition-all flex-shrink-0"
                 >
                   <LoadingSpinner v-if="isCompletingReminder" size="small" color="white" />
                   <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -229,6 +297,12 @@
       </section>
     </div>
 
+    <!-- Календарь модал (Requirement 10.1) -->
+    <CalendarModal 
+      :is-open="isCalendarOpen" 
+      @close="isCalendarOpen = false"
+    />
+
     <BottomNav />
   </div>
 </template>
@@ -239,9 +313,12 @@ import { useReminders } from '~/composables/useReminders'
 import { useGamification } from '~/composables/useGamification'
 import { useActivity } from '~/composables/useActivity'
 import { useNotifications } from '~/composables/useNotifications'
+import { useEvents, type Event } from '~/composables/useEvents'
+import { useInvitations } from '~/composables/useInvitations'
 import { useAuthStore } from '~/stores/auth'
 
 const authStore = useAuthStore()
+const router = useRouter()
 
 const {
   todayReminders,
@@ -266,12 +343,26 @@ const {
   error: activityError
 } = useActivity()
 
+const {
+  upcomingEvents,
+  fetchUpcomingEvents,
+  error: eventsError
+} = useEvents()
+
+const {
+  pendingInvitations,
+  pendingCount: invitationCount,
+  fetchInvitations,
+  error: invitationsError
+} = useInvitations()
+
 const { showSuccess, showError } = useNotifications()
 
 const isLoading = ref(false)
 const isCompletingReminder = ref(false)
+const isCalendarOpen = ref(false)
 const avatarUrl = ref<string | null>(null)
-const error = computed(() => remindersError.value || gamificationError.value || activityError.value)
+const error = computed(() => remindersError.value || gamificationError.value || activityError.value || eventsError.value || invitationsError.value)
 
 const userName = computed(() => {
   return authStore.user?.firstName 
@@ -321,7 +412,9 @@ const loadData = async () => {
     await Promise.all([
       fetchReminders(),
       fetchGamification(),
-      fetchActivity('week')
+      fetchActivity('week'),
+      fetchUpcomingEvents(),
+      fetchInvitations(true)
     ])
   } catch (err: any) {
     console.error('[Dashboard] Ошибка:', err)
@@ -363,6 +456,43 @@ const getCategoryIcon = (category?: string): string => {
   return icons[category || ''] || '👤'
 }
 
+/**
+ * Обработчик клика по событию
+ */
+const handleEventClick = (event: Event) => {
+  router.push(`/events/${event.id}`)
+}
+
+/**
+ * Получить иконку типа события для приглашения
+ */
+const getInvitationIcon = (type?: string): string => {
+  const icons: Record<string, string> = {
+    meeting: '🤝',
+    call: '📞',
+    trip: '✈️',
+    other: '📅'
+  }
+  return icons[type || 'other'] || '📅'
+}
+
+/**
+ * Получить имя пригласившего
+ */
+const getInviterDisplayName = (inviter: any): string => {
+  if (!inviter) return 'Пользователь'
+  
+  const parts = []
+  if (inviter.firstName) parts.push(inviter.firstName)
+  if (inviter.lastName) parts.push(inviter.lastName)
+  
+  if (parts.length > 0) {
+    return parts.join(' ')
+  }
+  
+  return inviter.username ? `@${inviter.username}` : 'Пользователь'
+}
+
 onMounted(() => {
   loadData()
 })
@@ -388,5 +518,15 @@ onMounted(() => {
 .fade-leave-active {
   position: absolute;
   width: calc(100% - 2rem);
+}
+
+/* Скрытие скроллбара для горизонтального скролла */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }
 </style>

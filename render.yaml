@@ -16,6 +16,12 @@ services:
           property: connectionString
       - key: TELEGRAM_BOT_TOKEN
         sync: false  # Нужно будет добавить вручную в Render Dashboard
+      - key: TELEGRAM_WEBHOOK_SECRET
+        sync: false  # Опционально: секрет для верификации webhook
+      - key: ENABLE_SCHEDULER
+        value: "true"  # Включить планировщик для обновления статусов событий
+      - key: APP_URL
+        value: https://nudge-telegram-app.onrender.com
     healthCheckPath: /api/health
     autoDeploy: true
 
@@ -27,3 +33,4 @@ databases:
     user: nudge_user
     region: frankfurt
     ipAllowList: []  # Пустой список = доступ только из Render сервисов
+
