@@ -10,6 +10,7 @@ export default defineEventHandler(async (event) => {
   const path = event.path
   if (path === '/api/health' || 
       path === '/api/migrate' || 
+      path === '/api/migrate-force' ||
       path === '/api/webhook/telegram' ||
       !path.startsWith('/api/')) {
     return
