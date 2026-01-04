@@ -4,6 +4,8 @@
 
 import { migrate } from 'drizzle-orm/postgres-js/migrator'
 import { db } from '../db'
+import { existsSync, readdirSync } from 'fs'
+import { resolve } from 'path'
 
 export default defineEventHandler(async (event) => {
   try {
@@ -21,15 +23,41 @@ export default defineEventHandler(async (event) => {
 
     console.log('Starting database migration...')
     
-    await migrate(db, { 
-      migrationsFolder: './server/db/migrations' 
-    })
+    // Определяем путь к миграциям
+    const possiblePaths = [
+      './server/db/migrations',
+      '../server/db/migrations',
+      resolve(process.cwd(), 'server/db/migrations'),
+      '/app/server/db/migrations'
+    ]
+    
+    let migrationsFolder = './server/db/migrations'
+    
+    for (const path of possiblePaths) {
+      console.log(`Checking migrations path: ${path}`)
+      if (existsSync(path)) {
+        console.log(`Found migrations at: ${path}`)
+        try {
+          const files = readdirSync(path)
+          console.log(`Migration files: ${files.join(', ')}`)
+          migrationsFolder = path
+          break
+        } catch (e) {
+          console.log(`Cannot read directory: ${path}`)
+        }
+      }
+    }
+    
+    console.log(`Using migrations folder: ${migrationsFolder}`)
+    
+    await migrate(db, { migrationsFolder })
     
     console.log('Migration completed successfully!')
     
     return {
       success: true,
       message: 'Database migrations completed successfully',
+      migrationsFolder,
       timestamp: new Date().toISOString()
     }
   } catch (error: any) {

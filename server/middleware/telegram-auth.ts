@@ -89,7 +89,12 @@ export default defineEventHandler(async (event) => {
 
     // Извлекаем данные пользователя
     const userJson = params.get('user')
+    
+    console.log('[Telegram Auth] initData params:', Array.from(params.keys()))
+    console.log('[Telegram Auth] userJson present:', !!userJson)
+    
     if (!userJson) {
+      console.error('[Telegram Auth] User data not found. Available params:', Array.from(params.entries()).map(([k]) => k))
       throw createError({
         statusCode: 400,
         statusMessage: 'User data not found in initData'
